@@ -1,0 +1,4 @@
+{"step":1,"name":"core-adapters-and-config","status":"completed","ts":"2026-11-21T18:05:00Z","summary":"Implemented core cache, HTTP client with circuit breaker, logger, tracing, SSRF config, CLI stdio/HTTP+SSE and Worker runtime"}
+{"step":2,"name":"tse-tools-and-schemas","status":"completed","ts":"2026-11-21T18:10:00Z","summary":"Implemented 7 Worker-safe TSE tools (EA20 Resultados + Dados Abertos CKAN) with Zod .strict() schemas, sanitization, and LGPD Art. 20 notices"}
+{"step":3,"name":"unit-and-transport-tests","status":"completed","ts":"2026-11-21T18:18:45Z","summary":"Added 13 Vitest suites (62 tests, 96.85% stmts / 88.16% branches) and dual-transport smoke integration test"}
+{"step":4,"name":"gates-and-commit","status":"completed","ts":"2026-11-21T18:20:42Z","summary":"Passed criteria-check (5/5), verify-tool-allowlist (0 violations), check-scope, secret-scan; committed f5a78af"}
