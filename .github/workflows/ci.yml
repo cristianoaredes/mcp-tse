@@ -1,0 +1,112 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x, 26.x]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Test MCP stdio and HTTP/SSE
+        run: npm run test:transport
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Check TypeScript (Node & Worker)
+        run: npx tsc --noEmit && npx tsc -p tsconfig.worker.json --noEmit
+
+      - name: Check mcp-server.ts line count constraint
+        run: |
+          LINE_COUNT=$(wc -l < lib/core/mcp-server.ts)
+          echo "lib/core/mcp-server.ts line count: $LINE_COUNT"
+          if [ "$LINE_COUNT" -gt 180 ]; then
+            echo "lib/core/mcp-server.ts exceeds 180 lines ($LINE_COUNT)"
+            exit 1
+          fi
+
+  cloudflare:
+    name: Cloudflare Workers Build
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Cloudflare Workers
+        run: npm run build:worker
+
+      - name: Verify worker bundle output and size
+        run: |
+          WORKER_FILE="build/lib/workers/worker.js"
+          test -s "$WORKER_FILE"
+          WORKER_SIZE=$(wc -c < "$WORKER_FILE")
+          echo "Worker bundle size: $WORKER_SIZE bytes"
+          if [ "$WORKER_SIZE" -gt 1048576 ]; then
+            echo "Worker exceeds Cloudflare 1MB limit"
+            exit 1
+          fi

@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-11-21T17:49:33Z",
+  "bootstrapped_at": "2026-11-21T17:49:33Z",
+  "generator": "codebase-ops-bootstrap",
+  "project_name": "mcp-tse",
+  "stack": "TypeScript / Node.js / MCP",
+  "baseline_commit": "",
+  "autonomy_level": "L3",
+  "sources": {},
+  "metrics": {
+    "total_tickets": 0,
+    "done_tickets": 0,
+    "archived_tickets": 0,
+    "avg_cycle_time": 0.0,
+    "status_breakdown": {}
+  },
+  "active_runs": [],
+  "malformed_runs": [],
+  "noncanonical_runs": [],
+  "zombie_runs": [],
+  "framework_version": "2.25.0",
+  "learning_log": []
+}

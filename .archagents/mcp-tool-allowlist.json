@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "server": "mcp-tse",
+  "updated_at": "2026-11-21T17:49:33Z",
+  "mcp_servers": {
+    "allowed": [
+      {
+        "server": "mcp-tse",
+        "rationale": "First-party read-only Brazilian electoral data MCP server (TSE Resultados EA20 & Dados Abertos CKAN) with Zod .strict() runtime input validation and host-allowlisted HTTPS upstream connectors",
+        "approved_by": "cristiano",
+        "approved_at": "2026-11-21T17:33:08Z"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "MCP-TOOL-01",
+      "name": "tse_eleicoes_catalogo",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "List Brazilian electoral cycles, election codes, dates, types, UFs, and offices from TSE ele-c.json.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TseEleicoesCatalogoSchema.strict() with bounded limit (1..50).",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-02",
+      "name": "tse_municipios_zonas",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Translate TSE 5-digit municipality codes, IBGE 7-digit codes, names, capitals, and electoral zones from EA20 mun-e*-cm.json.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TseMunicipiosZonasSchema.strict() requiring >=1 filter and bounded limit (1..50).",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-03",
+      "name": "tse_apuracao_cargo",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Query EA20 section tally, turnout summary, and paginated candidate vote rankings for an electoral office.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TseApuracaoCargoSchema.strict() with cargo/scope validation, bounded page/limit, and LGPD Art. 20 homonym notice.",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-04",
+      "name": "tse_candidatos_busca",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Search EA20 candidates (including running mates/substitutes) by name, number, party, or elected status.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TseCandidatosBuscaSchema.strict() with bounded limit (1..50), sanitized untrusted text, and LGPD Art. 20 notice.",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-05",
+      "name": "tse_partidos_federacoes",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Summarize party and federation nominal/legend vote totals and elected counts from EA20 -u.json.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TsePartidosFederacoesSchema.strict() with cargo/scope validation and bounded limit (1..50).",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-06",
+      "name": "tse_comparecimento_abstencao",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Fetch EA20 turnout, abstention, eligible voters, and polling section stats by Brazil, UF, or municipality.",
+      "rationale": "Read-only allowlisted-HTTPS lookup validated by TseComparecimentoAbstencaoSchema.strict() enforcing 2-letter UF when municipal code is supplied.",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    },
+    {
+      "id": "MCP-TOOL-07",
+      "name": "tse_dados_abertos_datasets",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_approval": false,
+      "description": "Query TSE Dados Abertos CKAN packages and cdn.tse.jus.br downloadable resources with cross-MCP and WAF notices.",
+      "rationale": "Read-only allowlisted-HTTPS CKAN package_search/package_show query validated by TseDadosAbertosDatasetsSchema.strict() with bounded rows (1..25) and explicit WAF non-bypass notice.",
+      "network_access": "allowlisted-https",
+      "api_key_env": null
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "apiUrls": {
+    "resultados": "https://resultados.tse.jus.br/oficial/",
+    "ckan": "https://dadosabertos.tse.jus.br/api/3/action/"
+  }
+}

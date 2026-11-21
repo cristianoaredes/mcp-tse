@@ -1,0 +1,59 @@
+name = "mcp-tse-aredes"
+main = "build/lib/workers/worker.js"
+compatibility_date = "2024-09-27"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "mcp-tse-aredes-prod"
+
+[env.staging]
+name = "mcp-tse-aredes-staging"
+
+[env.staging.vars]
+MCP_TRANSPORT = "http"
+MCP_HTTP_PORT = "8787"
+MCP_CACHE_SIZE = "256"
+MCP_CACHE_TTL = "60000"
+
+[[env.staging.kv_namespaces]]
+binding = "MCP_CACHE"
+id = "00000000000000000000000000000002"
+
+[[env.staging.kv_namespaces]]
+binding = "MCP_KV"
+id = "00000000000000000000000000000002"
+
+[env.production.vars]
+MCP_TRANSPORT = "http"
+MCP_HTTP_PORT = "8787"
+MCP_CACHE_SIZE = "256"
+MCP_CACHE_TTL = "60000"
+
+[[env.production.kv_namespaces]]
+binding = "MCP_CACHE"
+id = "00000000000000000000000000000001"
+
+[[env.production.kv_namespaces]]
+binding = "MCP_KV"
+id = "00000000000000000000000000000001"
+
+[vars]
+MCP_TRANSPORT = "http"
+MCP_HTTP_PORT = "8787"
+MCP_CACHE_SIZE = "256"
+MCP_CACHE_TTL = "60000"
+
+[build]
+command = "npm run build:worker"
+cwd = "."
+watch_dir = "lib"
+
+# Placeholder KV namespace IDs; replace with provisioned IDs in Cloudflare Dashboard before deploy.
+[[kv_namespaces]]
+binding = "MCP_CACHE"
+id = "00000000000000000000000000000001"
+
+[[kv_namespaces]]
+binding = "MCP_KV"
+id = "00000000000000000000000000000001"
+preview_id = "00000000000000000000000000000002"

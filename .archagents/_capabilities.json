@@ -1,0 +1,19 @@
+{
+  "enabled": false,
+  "schema_version": "1.0",
+  "agentic": {
+    "mcp": true,
+    "llm": false,
+    "role": "mcp-server",
+    "server_name": "mcp-tse",
+    "tool_count": 7,
+    "transports": [
+      "stdio",
+      "http",
+      "sse",
+      "cloudflare-worker"
+    ],
+    "runtime_validation": "zod",
+    "allowlist_path": ".archagents/mcp-tool-allowlist.json"
+  }
+}
