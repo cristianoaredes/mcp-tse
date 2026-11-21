@@ -5,8 +5,8 @@ title: "[SPC-0001] Implementação inicial mcp-tse v0.1.0 (7 tools Worker-safe E
 source: spec
 created_at: 2026-11-21T17:57:29Z
 created_by: ops
-updated_at: 2026-11-21T17:58:54Z
-status: designed
+updated_at: 2026-11-21T18:28:18Z
+status: done
 severity: medium
 category: feature
 effort: M
@@ -16,8 +16,10 @@ business_impact: ""
 linked_findings: []
 linked_designs:
   - DES-0001
-linked_runs: []
-linked_verifications: []
+linked_runs:
+  - RUN-20261121-180015-tck-0001
+linked_verifications:
+  - VER-20261121-182723-tck-0001
 linked_docs:
   - .archagents/12-inception/specs/SPC-0001-mcp-tse-v010-catalog.md
 external_refs: []
@@ -51,3 +53,7 @@ Antes desta implementação, o repositório contém apenas o scaffold de governa
 - 2026-11-21T17:57:29Z - **raw** - criado via scripts/ops/ticket/create.py.
 - 2026-11-21T17:58:01Z - **triaged** - SPC-0001 DoR pass; security_sensitive full ceremony
 - 2026-11-21T17:58:54Z - **designed** - DES-0001 approved with Threat Model and file scope
+- 2026-11-21T18:00:15Z - **executing** - Start executing DES-0001 on feat/TCK-0001-v0.1.0-catalog
+- 2026-11-21T18:00:37Z - **linked** - links updated
+- 2026-11-21T18:21:16Z - **verifying** - All 5 acceptance criteria pass, 13/13 Vitest suites (62 tests) with 96.85/88.16/98.41/97.76 coverage, dual-transport smoke pass, and 0 tool-allowlist/scope/secret violations; ready for P10 independent verify.
+- 2026-11-21T18:28:18Z - **done** - P10 verified and judged for mcp-tse v0.1.0

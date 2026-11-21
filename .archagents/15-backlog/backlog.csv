@@ -1,0 +1,2 @@
+id,slug,title,status,priority,type,effort,source,reopened_count,rollback_commit,hotfix_for,escaped_defect,created_at,done_at
+TCK-0001,spc-0001-implementacao-inicial-mcp-tse-v0-1-0-7-tools-worker-safe-ea20-ckan,[SPC-0001] Implementação inicial mcp-tse v0.1.0 (7 tools Worker-safe EA20 + CKAN),done,medium,feature,M,spec,,,,,2026-11-21T17:57:29Z,
