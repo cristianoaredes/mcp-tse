@@ -200,7 +200,7 @@ Exemplo com `.mcprc.json` baseado em [`.mcprc.example.json`](.mcprc.example.json
   },
   "auth": {
     "headers": {
-      "X-API-Key": "opcional-para-mirror-interno-na-allowlist"
+      "X-API-Key": "<sua-chave-opcional>"
     }
   }
 }
