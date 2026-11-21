@@ -5,8 +5,8 @@ title: "Documentar README.md completo no padrão Orqo/mcp-dadosbr e CONTRIBUTING
 source: operator
 created_at: 2026-11-21T19:34:16Z
 created_by: ops
-updated_at: 2026-11-21T19:41:28Z
-status: verifying
+updated_at: 2026-11-21T19:50:21Z
+status: done
 severity: low
 category: docs
 effort: S
@@ -18,7 +18,8 @@ linked_designs:
   - DES-0002
 linked_runs:
   - RUN-20261121-193447-tck-0002
-linked_verifications: []
+linked_verifications:
+  - VER-20261121-194719-tck-0002
 linked_docs: []
 external_refs: []
 external_sync: []
@@ -47,8 +48,7 @@ Criado via scripts/ops/ticket/create.py a partir de source=operator.
 
 ## Falsificador
 
-<!-- O que reprova ANTES do fix: o comando que fica vermelho hoje, ou
-     `arquivo:linha` da evidência. Sem isto o ticket não fecha. -->
+Antes da execução, `README.md:1-88` possui apenas `88` linhas sem as seções obrigatórias do padrão Orqo/`mcp-dadosbr` (reprovando com exit `1` o comando ``node -e "import('node:fs').then(fs => { const md = fs.readFileSync('README.md','utf8'); if (md.split('\n').length < 320 || !md.includes('by Orqo')) process.exit(1); })"``) e `CONTRIBUTING.md` não existia (`test -f CONTRIBUTING.md` falhava antes de `TCK-0002`).
 
 ## Log de transicoes
 
@@ -57,3 +57,4 @@ Criado via scripts/ops/ticket/create.py a partir de source=operator.
 - 2026-11-21T19:34:47Z - **designed** - DES-0002 approved with file scope CONTRIBUTING.md (new) and README.md (modified)
 - 2026-11-21T19:34:56Z - **executing** - Start executing DES-0002 on docs/TCK-0002-readme-orqo-standard
 - 2026-11-21T19:41:28Z - **verifying** - All 4 acceptance checks pass (README_STRUCTURE_OK, LINKS_OK:53, build+worker, vitest 62/62), tsc, transport smoke, check-scope, verify-run, and secret-scan clean; ready for P10 verification
+- 2026-11-21T19:50:21Z - **done** - P10 verified and judged for Orqo-standard README.md and CONTRIBUTING.md
