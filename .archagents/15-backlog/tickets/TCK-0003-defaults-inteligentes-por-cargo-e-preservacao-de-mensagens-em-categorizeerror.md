@@ -5,8 +5,8 @@ title: "Defaults inteligentes por cargo e preservação de mensagens em categori
 source: bug
 created_at: 2026-11-22T02:02:10Z
 created_by: ops
-updated_at: 2026-11-22T02:08:20Z
-status: verifying
+updated_at: 2026-11-22T02:18:42Z
+status: done
 severity: medium
 category: bug
 effort: S
@@ -18,7 +18,8 @@ linked_designs:
   - DES-0003
 linked_runs:
   - RUN-20261122-020300-tck-0003
-linked_verifications: []
+linked_verifications:
+  - VER-20261122-021543-tck-0003
 linked_docs: []
 external_refs: []
 external_sync: []
@@ -58,3 +59,4 @@ Antes do fix, em `lib/shared/tse-schemas.ts:41-53`, `cicloSchema` e `codigoEleic
 - 2026-11-22T02:03:00Z - **designed** - DES-0003 approved with file scope for cargo defaults and errors.ts
 - 2026-11-22T02:03:09Z - **executing** - Start executing DES-0003 on fix/TCK-0003-auto-cargo-election
 - 2026-11-22T02:08:20Z - **verifying** - All 5 acceptance criteria pass, 13/13 Vitest suites (63/63 tests, 96.88% stmts), build+worker & tsc --noEmit (Node+Worker) pass, transport smoke & live StdioClientTransport pass; ready for P10 independent verify.
+- 2026-11-22T02:18:42Z - **done** - P10 independent verification + pipeline-judge approved (VER-20261122-021543-tck-0003): 63/63 vitest, build+worker+tsc, test:transport and live stdio E2E PASS

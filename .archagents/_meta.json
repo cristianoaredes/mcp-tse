@@ -9,13 +9,13 @@
   "autonomy_level": "L3",
   "sources": {},
   "metrics": {
-    "total_tickets": 2,
-    "done_tickets": 2,
+    "total_tickets": 3,
+    "done_tickets": 3,
     "archived_tickets": 0,
-    "avg_cycle_time": 0.39,
+    "avg_cycle_time": 0.35,
     "avg_cycle_time_coverage": {
-      "measured": 2,
-      "total": 2,
+      "measured": 3,
+      "total": 3,
       "ratio": 1.0
     },
     "success_rate": 0.0,
@@ -27,7 +27,7 @@
       "source": "learning_log + taxonomia TCK-0820"
     },
     "status_breakdown": {
-      "done": 2
+      "done": 3
     }
   },
   "active_runs": [],
@@ -45,8 +45,8 @@
       "backlog_health": {
         "value": 100.0,
         "weight": 0.4,
-        "measured": 2,
-        "total": 2,
+        "measured": 3,
+        "total": 3,
         "ratio": 1.0
       },
       "recent_success": {
@@ -74,5 +74,5 @@
       "source": "zombie-run-scan.py (TCK-1447/TCK-2477) via .archagents/.zombie-runs-baseline.json"
     }
   },
-  "last_updated": "2026-11-21T19:50:22.168821Z"
+  "last_updated": "2026-11-22T02:18:43.265904Z"
 }
