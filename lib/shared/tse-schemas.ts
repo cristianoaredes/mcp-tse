@@ -38,19 +38,57 @@ const STATE_CARGOS = new Set<TseCargo>([
   "deputado_distrital",
 ]);
 
-const cicloSchema = z
+interface CargoElectionDefaults {
+  ciclo: string;
+  codigoEleicao: string;
+}
+
+const DEFAULT_ELECTION_BY_CARGO_GROUP: Record<
+  "municipal" | "state" | "federal",
+  CargoElectionDefaults
+> = {
+  municipal: { ciclo: "ele2024", codigoEleicao: "619" },
+  state: { ciclo: "ele2026", codigoEleicao: "6259" },
+  federal: { ciclo: "ele2026", codigoEleicao: "6257" },
+};
+
+function getCargoElectionDefaults(cargo: TseCargo): CargoElectionDefaults {
+  if (MUNICIPAL_CARGOS.has(cargo)) {
+    return DEFAULT_ELECTION_BY_CARGO_GROUP.municipal;
+  }
+  if (STATE_CARGOS.has(cargo)) {
+    return DEFAULT_ELECTION_BY_CARGO_GROUP.state;
+  }
+  return DEFAULT_ELECTION_BY_CARGO_GROUP.federal;
+}
+
+function resolveCargoElection(data: {
+  cargo: TseCargo;
+  ciclo?: string;
+  codigo_eleicao?: string;
+}): { ciclo: string; codigo_eleicao?: string } {
+  const defaults = getCargoElectionDefaults(data.cargo);
+  const ciclo = data.ciclo ?? defaults.ciclo;
+  const codigo_eleicao =
+    data.codigo_eleicao ?? (ciclo === defaults.ciclo ? defaults.codigoEleicao : undefined);
+  return { ciclo, codigo_eleicao };
+}
+
+const cicloOptionalSchema = z
   .string()
   .trim()
   .regex(/^ele\d{4}$/, "Expected ciclo in format 'eleYYYY' (e.g., 'ele2026')")
-  .optional()
-  .default("ele2026");
+  .optional();
 
-const codigoEleicaoSchema = z
+const codigoEleicaoOptionalSchema = z
   .string()
   .trim()
   .regex(/^\d{1,6}$/, "Expected numeric codigo_eleicao (1 to 6 digits)")
-  .optional()
-  .default("6257");
+  .optional();
+
+const cicloSchema = cicloOptionalSchema.default("ele2026");
+
+const codigoEleicaoSchema = codigoEleicaoOptionalSchema.default("6257");
 
 const ufOptionalSchema = z
   .string()
@@ -77,10 +115,25 @@ function isValidStateUf(uf?: string): boolean {
 }
 
 function validateCargoScope(
-  data: { cargo: TseCargo; uf?: string; codigo_tse_municipio?: string },
+  data: {
+    cargo: TseCargo;
+    ciclo?: string;
+    codigo_eleicao?: string;
+    uf?: string;
+    codigo_tse_municipio?: string;
+  },
   ctx: RefinementCtx,
 ): void {
   const { cargo, uf, codigo_tse_municipio } = data;
+  const resolved = resolveCargoElection(data);
+
+  if (!resolved.codigo_eleicao) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["codigo_eleicao"],
+      message: `codigo_eleicao is required when ciclo is '${resolved.ciclo}' for cargo '${cargo}' (use tse_eleicoes_catalogo to look up election codes).`,
+    });
+  }
 
   if (uf && !VALID_UFS_SET.has(uf)) {
     ctx.addIssue({
@@ -127,6 +180,18 @@ function validateCargoScope(
       message: "Providing codigo_tse_municipio requires a 2-letter state UF (different from 'br').",
     });
   }
+}
+
+function applyCargoElectionDefaults<
+  T extends { cargo: TseCargo; ciclo?: string; codigo_eleicao?: string },
+>(data: T): Omit<T, "ciclo" | "codigo_eleicao"> & { ciclo: string; codigo_eleicao: string } {
+  const { ciclo, codigo_eleicao } = resolveCargoElection(data);
+  const defaults = getCargoElectionDefaults(data.cargo);
+  return {
+    ...data,
+    ciclo,
+    codigo_eleicao: codigo_eleicao ?? defaults.codigoEleicao,
+  };
 }
 
 export const TseEleicoesCatalogoSchema = z
@@ -192,8 +257,8 @@ export const TseMunicipiosZonasSchema = z
 
 export const TseApuracaoCargoSchema = z
   .object({
-    ciclo: cicloSchema,
-    codigo_eleicao: codigoEleicaoSchema,
+    ciclo: cicloOptionalSchema,
+    codigo_eleicao: codigoEleicaoOptionalSchema,
     cargo: z.enum(TSE_CARGOS),
     uf: ufOptionalSchema,
     codigo_tse_municipio: codigoTseMunicipioSchema,
@@ -201,12 +266,13 @@ export const TseApuracaoCargoSchema = z
     limit: z.number().int().min(1).max(50).optional().default(25),
   })
   .strict()
-  .superRefine(validateCargoScope);
+  .superRefine(validateCargoScope)
+  .transform(applyCargoElectionDefaults);
 
 export const TseCandidatosBuscaSchema = z
   .object({
-    ciclo: cicloSchema,
-    codigo_eleicao: codigoEleicaoSchema,
+    ciclo: cicloOptionalSchema,
+    codigo_eleicao: codigoEleicaoOptionalSchema,
     cargo: z.enum(TSE_CARGOS),
     uf: ufOptionalSchema,
     codigo_tse_municipio: codigoTseMunicipioSchema,
@@ -221,12 +287,13 @@ export const TseCandidatosBuscaSchema = z
     limit: z.number().int().min(1).max(50).optional().default(20),
   })
   .strict()
-  .superRefine(validateCargoScope);
+  .superRefine(validateCargoScope)
+  .transform(applyCargoElectionDefaults);
 
 export const TsePartidosFederacoesSchema = z
   .object({
-    ciclo: cicloSchema,
-    codigo_eleicao: codigoEleicaoSchema,
+    ciclo: cicloOptionalSchema,
+    codigo_eleicao: codigoEleicaoOptionalSchema,
     cargo: z.enum(TSE_CARGOS),
     uf: ufOptionalSchema,
     codigo_tse_municipio: codigoTseMunicipioSchema,
@@ -234,7 +301,8 @@ export const TsePartidosFederacoesSchema = z
     limit: z.number().int().min(1).max(50).optional().default(25),
   })
   .strict()
-  .superRefine(validateCargoScope);
+  .superRefine(validateCargoScope)
+  .transform(applyCargoElectionDefaults);
 
 export const TseComparecimentoAbstencaoSchema = z
   .object({

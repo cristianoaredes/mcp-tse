@@ -1084,13 +1084,13 @@ export async function executeComparecimentoAbstencao(
 const scopePropertiesSchema = {
   ciclo: {
     type: "string",
-    description: "Electoral cycle identifier (default: 'ele2026')",
-    default: "ele2026",
+    description:
+      "Electoral cycle identifier (auto-resolved by cargo if omitted: 'ele2024' for prefeito/vereador, 'ele2026' for presidente/governador/senador/deputado_*)",
   },
   codigo_eleicao: {
     type: "string",
-    description: "Numeric TSE election code (default: '6257')",
-    default: "6257",
+    description:
+      "Numeric TSE election code (auto-resolved by cargo if omitted: '619' for municipal in ele2024, '6259' for state offices in ele2026, '6257' for presidente in ele2026)",
   },
   cargo: {
     type: "string",

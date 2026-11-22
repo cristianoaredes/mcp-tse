@@ -1,0 +1,504 @@
+diff --git a/lib/shared/errors.ts b/lib/shared/errors.ts
+index 5993100..be92efb 100644
+--- a/lib/shared/errors.ts
++++ b/lib/shared/errors.ts
+@@ -77,10 +77,10 @@ export class ExternalAPIError extends MCPError {
+ }
+ 
+ export class TimeoutError extends MCPError {
+-  constructor(operation: string, timeoutMs: number) {
++  constructor(operation: string, timeoutMs: number, customMessage?: string) {
+     super(
+       ErrorCode.TIMEOUT_ERROR,
+-      `Operation '${operation}' timed out after ${timeoutMs}ms`,
++      customMessage ?? `Operation '${operation}' timed out after ${timeoutMs}ms`,
+     );
+     this.name = "TimeoutError";
+   }
+@@ -101,10 +101,10 @@ export class ConfigurationError extends MCPError {
+ }
+ 
+ export class ResourceNotFoundError extends MCPError {
+-  constructor(resource: string, identifier: string) {
++  constructor(resource: string, identifier: string, customMessage?: string) {
+     super(
+       ErrorCode.RESOURCE_NOT_FOUND,
+-      `${resource} not found: ${identifier}`,
++      customMessage ?? `${resource} not found: ${identifier}`,
+       { resource, identifier },
+     );
+     this.name = "ResourceNotFoundError";
+@@ -120,7 +120,7 @@ export function categorizeError(error: Error | unknown): MCPError {
+     const message = error.message.toLowerCase();
+ 
+     if (message.includes("timeout") || message.includes("timed out")) {
+-      return new TimeoutError("operation", 30000);
++      return new TimeoutError("operation", 30000, error.message);
+     }
+ 
+     if (message.includes("rate limit") || message.includes("too many requests")) {
+@@ -154,7 +154,7 @@ export function categorizeError(error: Error | unknown): MCPError {
+     }
+ 
+     if (message.includes("not found") || message.includes("404")) {
+-      return new ResourceNotFoundError("resource", "unknown");
++      return new ResourceNotFoundError("resource", "unknown", error.message);
+     }
+ 
+     return new ExternalAPIError(error.message);
+diff --git a/lib/shared/tse-schemas.ts b/lib/shared/tse-schemas.ts
+index bb68f23..ec26cae 100644
+--- a/lib/shared/tse-schemas.ts
++++ b/lib/shared/tse-schemas.ts
+@@ -38,19 +38,57 @@ const STATE_CARGOS = new Set<TseCargo>([
+   "deputado_distrital",
+ ]);
+ 
+-const cicloSchema = z
++interface CargoElectionDefaults {
++  ciclo: string;
++  codigoEleicao: string;
++}
++
++const DEFAULT_ELECTION_BY_CARGO_GROUP: Record<
++  "municipal" | "state" | "federal",
++  CargoElectionDefaults
++> = {
++  municipal: { ciclo: "ele2024", codigoEleicao: "619" },
++  state: { ciclo: "ele2026", codigoEleicao: "6259" },
++  federal: { ciclo: "ele2026", codigoEleicao: "6257" },
++};
++
++function getCargoElectionDefaults(cargo: TseCargo): CargoElectionDefaults {
++  if (MUNICIPAL_CARGOS.has(cargo)) {
++    return DEFAULT_ELECTION_BY_CARGO_GROUP.municipal;
++  }
++  if (STATE_CARGOS.has(cargo)) {
++    return DEFAULT_ELECTION_BY_CARGO_GROUP.state;
++  }
++  return DEFAULT_ELECTION_BY_CARGO_GROUP.federal;
++}
++
++function resolveCargoElection(data: {
++  cargo: TseCargo;
++  ciclo?: string;
++  codigo_eleicao?: string;
++}): { ciclo: string; codigo_eleicao?: string } {
++  const defaults = getCargoElectionDefaults(data.cargo);
++  const ciclo = data.ciclo ?? defaults.ciclo;
++  const codigo_eleicao =
++    data.codigo_eleicao ?? (ciclo === defaults.ciclo ? defaults.codigoEleicao : undefined);
++  return { ciclo, codigo_eleicao };
++}
++
++const cicloOptionalSchema = z
+   .string()
+   .trim()
+   .regex(/^ele\d{4}$/, "Expected ciclo in format 'eleYYYY' (e.g., 'ele2026')")
+-  .optional()
+-  .default("ele2026");
++  .optional();
+ 
+-const codigoEleicaoSchema = z
++const codigoEleicaoOptionalSchema = z
+   .string()
+   .trim()
+   .regex(/^\d{1,6}$/, "Expected numeric codigo_eleicao (1 to 6 digits)")
+-  .optional()
+-  .default("6257");
++  .optional();
++
++const cicloSchema = cicloOptionalSchema.default("ele2026");
++
++const codigoEleicaoSchema = codigoEleicaoOptionalSchema.default("6257");
+ 
+ const ufOptionalSchema = z
+   .string()
+@@ -77,10 +115,25 @@ function isValidStateUf(uf?: string): boolean {
+ }
+ 
+ function validateCargoScope(
+-  data: { cargo: TseCargo; uf?: string; codigo_tse_municipio?: string },
++  data: {
++    cargo: TseCargo;
++    ciclo?: string;
++    codigo_eleicao?: string;
++    uf?: string;
++    codigo_tse_municipio?: string;
++  },
+   ctx: RefinementCtx,
+ ): void {
+   const { cargo, uf, codigo_tse_municipio } = data;
++  const resolved = resolveCargoElection(data);
++
++  if (!resolved.codigo_eleicao) {
++    ctx.addIssue({
++      code: "custom",
++      path: ["codigo_eleicao"],
++      message: `codigo_eleicao is required when ciclo is '${resolved.ciclo}' for cargo '${cargo}' (use tse_eleicoes_catalogo to look up election codes).`,
++    });
++  }
+ 
+   if (uf && !VALID_UFS_SET.has(uf)) {
+     ctx.addIssue({
+@@ -129,6 +182,18 @@ function validateCargoScope(
+   }
+ }
+ 
++function applyCargoElectionDefaults<
++  T extends { cargo: TseCargo; ciclo?: string; codigo_eleicao?: string },
++>(data: T): Omit<T, "ciclo" | "codigo_eleicao"> & { ciclo: string; codigo_eleicao: string } {
++  const { ciclo, codigo_eleicao } = resolveCargoElection(data);
++  const defaults = getCargoElectionDefaults(data.cargo);
++  return {
++    ...data,
++    ciclo,
++    codigo_eleicao: codigo_eleicao ?? defaults.codigoEleicao,
++  };
++}
++
+ export const TseEleicoesCatalogoSchema = z
+   .object({
+     ano: z.number().int().min(2014).max(2034).optional(),
+@@ -192,8 +257,8 @@ export const TseMunicipiosZonasSchema = z
+ 
+ export const TseApuracaoCargoSchema = z
+   .object({
+-    ciclo: cicloSchema,
+-    codigo_eleicao: codigoEleicaoSchema,
++    ciclo: cicloOptionalSchema,
++    codigo_eleicao: codigoEleicaoOptionalSchema,
+     cargo: z.enum(TSE_CARGOS),
+     uf: ufOptionalSchema,
+     codigo_tse_municipio: codigoTseMunicipioSchema,
+@@ -201,12 +266,13 @@ export const TseApuracaoCargoSchema = z
+     limit: z.number().int().min(1).max(50).optional().default(25),
+   })
+   .strict()
+-  .superRefine(validateCargoScope);
++  .superRefine(validateCargoScope)
++  .transform(applyCargoElectionDefaults);
+ 
+ export const TseCandidatosBuscaSchema = z
+   .object({
+-    ciclo: cicloSchema,
+-    codigo_eleicao: codigoEleicaoSchema,
++    ciclo: cicloOptionalSchema,
++    codigo_eleicao: codigoEleicaoOptionalSchema,
+     cargo: z.enum(TSE_CARGOS),
+     uf: ufOptionalSchema,
+     codigo_tse_municipio: codigoTseMunicipioSchema,
+@@ -221,12 +287,13 @@ export const TseCandidatosBuscaSchema = z
+     limit: z.number().int().min(1).max(50).optional().default(20),
+   })
+   .strict()
+-  .superRefine(validateCargoScope);
++  .superRefine(validateCargoScope)
++  .transform(applyCargoElectionDefaults);
+ 
+ export const TsePartidosFederacoesSchema = z
+   .object({
+-    ciclo: cicloSchema,
+-    codigo_eleicao: codigoEleicaoSchema,
++    ciclo: cicloOptionalSchema,
++    codigo_eleicao: codigoEleicaoOptionalSchema,
+     cargo: z.enum(TSE_CARGOS),
+     uf: ufOptionalSchema,
+     codigo_tse_municipio: codigoTseMunicipioSchema,
+@@ -234,7 +301,8 @@ export const TsePartidosFederacoesSchema = z
+     limit: z.number().int().min(1).max(50).optional().default(25),
+   })
+   .strict()
+-  .superRefine(validateCargoScope);
++  .superRefine(validateCargoScope)
++  .transform(applyCargoElectionDefaults);
+ 
+ export const TseComparecimentoAbstencaoSchema = z
+   .object({
+diff --git a/lib/tools/tse-resultados.ts b/lib/tools/tse-resultados.ts
+index eae6255..a0757de 100644
+--- a/lib/tools/tse-resultados.ts
++++ b/lib/tools/tse-resultados.ts
+@@ -1084,13 +1084,13 @@ export async function executeComparecimentoAbstencao(
+ const scopePropertiesSchema = {
+   ciclo: {
+     type: "string",
+-    description: "Electoral cycle identifier (default: 'ele2026')",
+-    default: "ele2026",
++    description:
++      "Electoral cycle identifier (auto-resolved by cargo if omitted: 'ele2024' for prefeito/vereador, 'ele2026' for presidente/governador/senador/deputado_*)",
+   },
+   codigo_eleicao: {
+     type: "string",
+-    description: "Numeric TSE election code (default: '6257')",
+-    default: "6257",
++    description:
++      "Numeric TSE election code (auto-resolved by cargo if omitted: '619' for municipal in ele2024, '6259' for state offices in ele2026, '6257' for presidente in ele2026)",
+   },
+   cargo: {
+     type: "string",
+diff --git a/test/unit/core-resilience-observability.test.ts b/test/unit/core-resilience-observability.test.ts
+index 684281b..1de9e9b 100644
+--- a/test/unit/core-resilience-observability.test.ts
++++ b/test/unit/core-resilience-observability.test.ts
+@@ -365,16 +365,30 @@ describe("Core resilience, cache, HTTP client, rate limiter, tracing, logger, er
+     expect(categorizeError(new AuthenticationError("unauthorized")).code).toBe(
+       ErrorCode.AUTHENTICATION_ERROR,
+     );
+-    expect(categorizeError(new Error("Operation timed out")).code).toBe(ErrorCode.TIMEOUT_ERROR);
++    const categorizedTimeout = categorizeError(new Error("Operation timed out after 8000ms"));
++    expect(categorizedTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
++    expect(categorizedTimeout.message).toBe("Operation timed out after 8000ms");
+     expect(categorizeError(new Error("Too many requests")).code).toBe(ErrorCode.RATE_LIMIT_ERROR);
+     expect(categorizeError(new Error("ECONNREFUSED")).code).toBe(ErrorCode.NETWORK_ERROR);
+     expect(categorizeError(new Error("Invalid parameter")).code).toBe(ErrorCode.VALIDATION_ERROR);
+-    expect(categorizeError(new Error("Resource not found")).code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
++    const categorizedNotFound = categorizeError(
++      new Error("Municipality 99999 not found in TSE turnout data"),
++    );
++    expect(categorizedNotFound.code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
++    expect(categorizedNotFound.message).toBe("Municipality 99999 not found in TSE turnout data");
++    expect(categorizeError(new Error("TSE Resultados API error: HTTP 404")).message).toBe(
++      "TSE Resultados API error: HTTP 404",
++    );
+     expect(categorizeError(new Error("API key missing")).code).toBe(ErrorCode.AUTHENTICATION_ERROR);
+     expect(categorizeError(new ConfigurationError("cfg")).code).toBe(ErrorCode.CONFIGURATION_ERROR);
+-    expect(categorizeError(new ResourceNotFoundError("eleicao", "999")).code).toBe(
+-      ErrorCode.RESOURCE_NOT_FOUND,
+-    );
++    const directNotFound = new ResourceNotFoundError("eleicao", "999");
++    expect(categorizeError(directNotFound).code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
++    expect(directNotFound.message).toBe("eleicao not found: 999");
++    expect(directNotFound.data).toEqual({ resource: "eleicao", identifier: "999" });
++    const customNotFound = new ResourceNotFoundError("eleicao", "999", "Custom not found message");
++    expect(customNotFound.code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
++    expect(customNotFound.message).toBe("Custom not found message");
++    expect(customNotFound.data).toEqual({ resource: "eleicao", identifier: "999" });
+     expect(categorizeError("raw").code).toBe(ErrorCode.INTERNAL_ERROR);
+     expect(formatErrorResponse(new ExternalAPIError("err", "tse", 502)).code).toBe(
+       ErrorCode.EXTERNAL_API_ERROR,
+@@ -403,7 +417,12 @@ describe("Core resilience, cache, HTTP client, rate limiter, tracing, logger, er
+     expect((await Result.fromPromise(Promise.reject(new NotFoundError("x")))).ok).toBe(false);
+     expect(new ResultRateLimitError("rl", 10).retryAfter).toBe(10);
+     expect(new ResultNetworkError("net", 502).statusCode).toBe(502);
+-    expect(new McpTimeoutError("op", 100).code).toBe(ErrorCode.TIMEOUT_ERROR);
++    const directTimeout = new McpTimeoutError("op", 100);
++    expect(directTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
++    expect(directTimeout.message).toBe("Operation 'op' timed out after 100ms");
++    const customTimeout = new McpTimeoutError("op", 100, "Custom timeout message");
++    expect(customTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
++    expect(customTimeout.message).toBe("Custom timeout message");
+     expect(new McpRateLimitError(5).code).toBe(ErrorCode.RATE_LIMIT_ERROR);
+     expect(new McpValidationError("v").code).toBe(ErrorCode.VALIDATION_ERROR);
+     expect(new NetworkError("n").code).toBe(ErrorCode.NETWORK_ERROR);
+diff --git a/test/unit/tse-tools.test.ts b/test/unit/tse-tools.test.ts
+index bbc1a1d..996d71a 100644
+--- a/test/unit/tse-tools.test.ts
++++ b/test/unit/tse-tools.test.ts
+@@ -7,6 +7,11 @@ import { resetCircuitBreakers } from "../../lib/core/http-client.js";
+ import { executeTool, resetMetrics } from "../../lib/core/tools.js";
+ import { UNTRUSTED_EXTERNAL_DATA_NOTICE } from "../../lib/shared/agentic-guard.js";
+ import { HOMONYM_HUMAN_REVIEW_NOTICE } from "../../lib/shared/compliance-notices.js";
++import {
++  TseApuracaoCargoSchema,
++  TseCandidatosBuscaSchema,
++  TsePartidosFederacoesSchema,
++} from "../../lib/shared/tse-schemas.js";
+ 
+ const ROOT = resolve(import.meta.dirname, "../..");
+ 
+@@ -263,6 +268,7 @@ describe("TSE Resultados EA20 Tools (1..6) & Worker Hygiene", () => {
+     resetMetrics();
+     resetCircuitBreakers();
+     vi.restoreAllMocks();
++    vi.unstubAllGlobals();
+   });
+ 
+   it("keeps zero node:* imports inside lib/shared/ and lib/tools/", () => {
+@@ -767,4 +773,186 @@ describe("TSE Resultados EA20 Tools (1..6) & Worker Hygiene", () => {
+     const partyList = (parts.data as { partidos: Array<{ sigla: string }> }).partidos;
+     expect(partyList.map((p) => p.sigla)).toEqual(["REDE", "MDB", "PSB"]);
+   });
++
++  it("resolves intelligent cargo-aware ciclo & codigo_eleicao defaults while preserving explicit values and .strict()", async () => {
++    // 1. State cargos default to ele2026 / 6259 across all 3 cargo schemas
++    for (const cargo of [
++      "governador",
++      "senador",
++      "deputado_federal",
++      "deputado_estadual",
++      "deputado_distrital",
++    ] as const) {
++      expect(TseApuracaoCargoSchema.parse({ cargo, uf: "SP" })).toMatchObject({
++        cargo,
++        uf: "sp",
++        ciclo: "ele2026",
++        codigo_eleicao: "6259",
++      });
++      expect(
++        TseCandidatosBuscaSchema.parse({ cargo, uf: "RJ", ciclo: "ele2026" }),
++      ).toMatchObject({
++        cargo,
++        uf: "rj",
++        ciclo: "ele2026",
++        codigo_eleicao: "6259",
++      });
++      expect(TsePartidosFederacoesSchema.parse({ cargo, uf: "MG" })).toMatchObject({
++        cargo,
++        uf: "mg",
++        ciclo: "ele2026",
++        codigo_eleicao: "6259",
++      });
++    }
++
++    // 2. Municipal cargos default to ele2024 / 619
++    for (const cargo of ["prefeito", "vereador"] as const) {
++      expect(
++        TseApuracaoCargoSchema.parse({ cargo, uf: "SP", codigo_tse_municipio: "71072" }),
++      ).toMatchObject({
++        cargo,
++        uf: "sp",
++        codigo_tse_municipio: "71072",
++        ciclo: "ele2024",
++        codigo_eleicao: "619",
++      });
++      expect(
++        TseCandidatosBuscaSchema.parse({
++          cargo,
++          uf: "SP",
++          codigo_tse_municipio: "71072",
++          ciclo: "ele2024",
++        }),
++      ).toMatchObject({
++        ciclo: "ele2024",
++        codigo_eleicao: "619",
++      });
++      expect(
++        TsePartidosFederacoesSchema.parse({
++          cargo,
++          uf: "SP",
++          codigo_tse_municipio: "71072",
++          codigo_eleicao: "620",
++        }),
++      ).toMatchObject({
++        ciclo: "ele2024",
++        codigo_eleicao: "620",
++      });
++    }
++
++    // 3. Presidente defaults to ele2026 / 6257
++    expect(TseApuracaoCargoSchema.parse({ cargo: "presidente" })).toMatchObject({
++      cargo: "presidente",
++      ciclo: "ele2026",
++      codigo_eleicao: "6257",
++    });
++    expect(
++      TseCandidatosBuscaSchema.parse({ cargo: "presidente", ciclo: "ele2026" }),
++    ).toMatchObject({
++      ciclo: "ele2026",
++      codigo_eleicao: "6257",
++    });
++
++    // 4. Explicit ciclo / codigo_eleicao values are always preserved
++    expect(
++      TseApuracaoCargoSchema.parse({
++        cargo: "governador",
++        uf: "SP",
++        ciclo: "ele2022",
++        codigo_eleicao: "546",
++      }),
++    ).toMatchObject({ ciclo: "ele2022", codigo_eleicao: "546" });
++    expect(
++      TseCandidatosBuscaSchema.parse({
++        cargo: "prefeito",
++        uf: "SP",
++        codigo_tse_municipio: "71072",
++        ciclo: "ele2020",
++        codigo_eleicao: "426",
++      }),
++    ).toMatchObject({ ciclo: "ele2020", codigo_eleicao: "426" });
++    expect(
++      TsePartidosFederacoesSchema.parse({
++        cargo: "governador",
++        uf: "SP",
++        codigo_eleicao: "6260",
++      }),
++    ).toMatchObject({ ciclo: "ele2026", codigo_eleicao: "6260" });
++
++    // 5. Non-default explicit ciclo without codigo_eleicao & .strict() extra keys fail cleanly
++    expect(
++      TseApuracaoCargoSchema.safeParse({ cargo: "governador", uf: "SP", ciclo: "ele2022" })
++        .success,
++    ).toBe(false);
++    expect(
++      TseCandidatosBuscaSchema.safeParse({
++        cargo: "prefeito",
++        uf: "SP",
++        codigo_tse_municipio: "71072",
++        ciclo: "ele2020",
++      }).success,
++    ).toBe(false);
++    expect(
++      TsePartidosFederacoesSchema.safeParse({
++        cargo: "governador",
++        uf: "SP",
++        extra_key: "nope",
++      }).success,
++    ).toBe(false);
++    expect(
++      TseApuracaoCargoSchema.safeParse({
++        cargo: "prefeito",
++        uf: "SP",
++        codigo_tse_municipio: "71072",
++        api_key: "secret",
++      }).success,
++    ).toBe(false);
++
++    // 6. End-to-end tool execution builds the expected EA20 URLs per cargo
++    const fetchMock = vi.fn(async () => jsonResponse(SAMPLE_EA20_U));
++    vi.stubGlobal("fetch", fetchMock);
++
++    const govRes = await executeTool(
++      "tse_apuracao_cargo",
++      { cargo: "governador", uf: "SP" },
++      apiConfig,
++    );
++    expect(govRes.ok).toBe(true);
++    expect(govRes.data).toMatchObject({
++      ciclo: "ele2026",
++      codigo_eleicao: "6259",
++      source_url: "https://resultados.tse.jus.br/oficial/ele2026/6259/dados/sp/sp-c0003-e006259-u.json",
++    });
++
++    const prefRes = await executeTool(
++      "tse_apuracao_cargo",
++      { cargo: "prefeito", uf: "SP", codigo_tse_municipio: "71072" },
++      apiConfig,
++    );
++    expect(prefRes.ok).toBe(true);
++    expect(prefRes.data).toMatchObject({
++      ciclo: "ele2024",
++      codigo_eleicao: "619",
++      source_url:
++        "https://resultados.tse.jus.br/oficial/ele2024/619/dados/sp/sp71072-c0011-e000619-u.json",
++    });
++
++    const explicitRes = await executeTool(
++      "tse_candidatos_busca",
++      {
++        cargo: "governador",
++        uf: "SP",
++        ciclo: "ele2022",
++        codigo_eleicao: "546",
++      },
++      apiConfig,
++    );
++    expect(explicitRes.ok).toBe(true);
++    expect(explicitRes.data).toMatchObject({
++      ciclo: "ele2022",
++      codigo_eleicao: "546",
++      source_url: "https://resultados.tse.jus.br/oficial/ele2022/546/dados/sp/sp-c0003-e000546-u.json",
++    });
++    expect(fetchMock).toHaveBeenCalledTimes(3);
++  });
+ });

@@ -7,6 +7,11 @@ import { resetCircuitBreakers } from "../../lib/core/http-client.js";
 import { executeTool, resetMetrics } from "../../lib/core/tools.js";
 import { UNTRUSTED_EXTERNAL_DATA_NOTICE } from "../../lib/shared/agentic-guard.js";
 import { HOMONYM_HUMAN_REVIEW_NOTICE } from "../../lib/shared/compliance-notices.js";
+import {
+  TseApuracaoCargoSchema,
+  TseCandidatosBuscaSchema,
+  TsePartidosFederacoesSchema,
+} from "../../lib/shared/tse-schemas.js";
 
 const ROOT = resolve(import.meta.dirname, "../..");
 
@@ -263,6 +268,7 @@ describe("TSE Resultados EA20 Tools (1..6) & Worker Hygiene", () => {
     resetMetrics();
     resetCircuitBreakers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("keeps zero node:* imports inside lib/shared/ and lib/tools/", () => {
@@ -766,5 +772,187 @@ describe("TSE Resultados EA20 Tools (1..6) & Worker Hygiene", () => {
     expect(parts.ok).toBe(true);
     const partyList = (parts.data as { partidos: Array<{ sigla: string }> }).partidos;
     expect(partyList.map((p) => p.sigla)).toEqual(["REDE", "MDB", "PSB"]);
+  });
+
+  it("resolves intelligent cargo-aware ciclo & codigo_eleicao defaults while preserving explicit values and .strict()", async () => {
+    // 1. State cargos default to ele2026 / 6259 across all 3 cargo schemas
+    for (const cargo of [
+      "governador",
+      "senador",
+      "deputado_federal",
+      "deputado_estadual",
+      "deputado_distrital",
+    ] as const) {
+      expect(TseApuracaoCargoSchema.parse({ cargo, uf: "SP" })).toMatchObject({
+        cargo,
+        uf: "sp",
+        ciclo: "ele2026",
+        codigo_eleicao: "6259",
+      });
+      expect(
+        TseCandidatosBuscaSchema.parse({ cargo, uf: "RJ", ciclo: "ele2026" }),
+      ).toMatchObject({
+        cargo,
+        uf: "rj",
+        ciclo: "ele2026",
+        codigo_eleicao: "6259",
+      });
+      expect(TsePartidosFederacoesSchema.parse({ cargo, uf: "MG" })).toMatchObject({
+        cargo,
+        uf: "mg",
+        ciclo: "ele2026",
+        codigo_eleicao: "6259",
+      });
+    }
+
+    // 2. Municipal cargos default to ele2024 / 619
+    for (const cargo of ["prefeito", "vereador"] as const) {
+      expect(
+        TseApuracaoCargoSchema.parse({ cargo, uf: "SP", codigo_tse_municipio: "71072" }),
+      ).toMatchObject({
+        cargo,
+        uf: "sp",
+        codigo_tse_municipio: "71072",
+        ciclo: "ele2024",
+        codigo_eleicao: "619",
+      });
+      expect(
+        TseCandidatosBuscaSchema.parse({
+          cargo,
+          uf: "SP",
+          codigo_tse_municipio: "71072",
+          ciclo: "ele2024",
+        }),
+      ).toMatchObject({
+        ciclo: "ele2024",
+        codigo_eleicao: "619",
+      });
+      expect(
+        TsePartidosFederacoesSchema.parse({
+          cargo,
+          uf: "SP",
+          codigo_tse_municipio: "71072",
+          codigo_eleicao: "620",
+        }),
+      ).toMatchObject({
+        ciclo: "ele2024",
+        codigo_eleicao: "620",
+      });
+    }
+
+    // 3. Presidente defaults to ele2026 / 6257
+    expect(TseApuracaoCargoSchema.parse({ cargo: "presidente" })).toMatchObject({
+      cargo: "presidente",
+      ciclo: "ele2026",
+      codigo_eleicao: "6257",
+    });
+    expect(
+      TseCandidatosBuscaSchema.parse({ cargo: "presidente", ciclo: "ele2026" }),
+    ).toMatchObject({
+      ciclo: "ele2026",
+      codigo_eleicao: "6257",
+    });
+
+    // 4. Explicit ciclo / codigo_eleicao values are always preserved
+    expect(
+      TseApuracaoCargoSchema.parse({
+        cargo: "governador",
+        uf: "SP",
+        ciclo: "ele2022",
+        codigo_eleicao: "546",
+      }),
+    ).toMatchObject({ ciclo: "ele2022", codigo_eleicao: "546" });
+    expect(
+      TseCandidatosBuscaSchema.parse({
+        cargo: "prefeito",
+        uf: "SP",
+        codigo_tse_municipio: "71072",
+        ciclo: "ele2020",
+        codigo_eleicao: "426",
+      }),
+    ).toMatchObject({ ciclo: "ele2020", codigo_eleicao: "426" });
+    expect(
+      TsePartidosFederacoesSchema.parse({
+        cargo: "governador",
+        uf: "SP",
+        codigo_eleicao: "6260",
+      }),
+    ).toMatchObject({ ciclo: "ele2026", codigo_eleicao: "6260" });
+
+    // 5. Non-default explicit ciclo without codigo_eleicao & .strict() extra keys fail cleanly
+    expect(
+      TseApuracaoCargoSchema.safeParse({ cargo: "governador", uf: "SP", ciclo: "ele2022" })
+        .success,
+    ).toBe(false);
+    expect(
+      TseCandidatosBuscaSchema.safeParse({
+        cargo: "prefeito",
+        uf: "SP",
+        codigo_tse_municipio: "71072",
+        ciclo: "ele2020",
+      }).success,
+    ).toBe(false);
+    expect(
+      TsePartidosFederacoesSchema.safeParse({
+        cargo: "governador",
+        uf: "SP",
+        extra_key: "nope",
+      }).success,
+    ).toBe(false);
+    expect(
+      TseApuracaoCargoSchema.safeParse({
+        cargo: "prefeito",
+        uf: "SP",
+        codigo_tse_municipio: "71072",
+        api_key: "secret",
+      }).success,
+    ).toBe(false);
+
+    // 6. End-to-end tool execution builds the expected EA20 URLs per cargo
+    const fetchMock = vi.fn(async () => jsonResponse(SAMPLE_EA20_U));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const govRes = await executeTool(
+      "tse_apuracao_cargo",
+      { cargo: "governador", uf: "SP" },
+      apiConfig,
+    );
+    expect(govRes.ok).toBe(true);
+    expect(govRes.data).toMatchObject({
+      ciclo: "ele2026",
+      codigo_eleicao: "6259",
+      source_url: "https://resultados.tse.jus.br/oficial/ele2026/6259/dados/sp/sp-c0003-e006259-u.json",
+    });
+
+    const prefRes = await executeTool(
+      "tse_apuracao_cargo",
+      { cargo: "prefeito", uf: "SP", codigo_tse_municipio: "71072" },
+      apiConfig,
+    );
+    expect(prefRes.ok).toBe(true);
+    expect(prefRes.data).toMatchObject({
+      ciclo: "ele2024",
+      codigo_eleicao: "619",
+      source_url:
+        "https://resultados.tse.jus.br/oficial/ele2024/619/dados/sp/sp71072-c0011-e000619-u.json",
+    });
+
+    const explicitRes = await executeTool(
+      "tse_candidatos_busca",
+      {
+        cargo: "governador",
+        uf: "SP",
+        ciclo: "ele2022",
+        codigo_eleicao: "546",
+      },
+      apiConfig,
+    );
+    expect(explicitRes.ok).toBe(true);
+    expect(explicitRes.data).toMatchObject({
+      ciclo: "ele2022",
+      codigo_eleicao: "546",
+      source_url: "https://resultados.tse.jus.br/oficial/ele2022/546/dados/sp/sp-c0003-e000546-u.json",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

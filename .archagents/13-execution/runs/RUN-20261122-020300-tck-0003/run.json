@@ -1,0 +1,30 @@
+{
+  "id": "RUN-20261122-020300-tck-0003",
+  "design": "DES-0003",
+  "ticket": "TCK-0003",
+  "started_at": "2026-11-22T02:03:01Z",
+  "started_by": "ops",
+  "environment": "dev",
+  "mode": "live",
+  "status": "completed",
+  "current_step": 3,
+  "total_steps": 3,
+  "ended_at": "2026-11-22T02:07:34Z",
+  "result": "pass",
+  "loop_iterations": 1,
+  "attempt_count": 1,
+  "lessons_consulted": [],
+  "loop_cost_usd": null,
+  "cost_source": "unknown",
+  "loop_strategy": "default",
+  "context_peak": 0,
+  "final_judge_delta": 31,
+  "warmup": false,
+  "final_judge_delta_source": "judge",
+  "lesson_utility": {
+    "utility": 0.0,
+    "n_lessons": 0,
+    "lessons_consulted": [],
+    "signal": "no-lessons"
+  }
+}
