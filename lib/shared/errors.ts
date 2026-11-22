@@ -77,10 +77,10 @@ export class ExternalAPIError extends MCPError {
 }
 
 export class TimeoutError extends MCPError {
-  constructor(operation: string, timeoutMs: number) {
+  constructor(operation: string, timeoutMs: number, customMessage?: string) {
     super(
       ErrorCode.TIMEOUT_ERROR,
-      `Operation '${operation}' timed out after ${timeoutMs}ms`,
+      customMessage ?? `Operation '${operation}' timed out after ${timeoutMs}ms`,
     );
     this.name = "TimeoutError";
   }
@@ -101,10 +101,10 @@ export class ConfigurationError extends MCPError {
 }
 
 export class ResourceNotFoundError extends MCPError {
-  constructor(resource: string, identifier: string) {
+  constructor(resource: string, identifier: string, customMessage?: string) {
     super(
       ErrorCode.RESOURCE_NOT_FOUND,
-      `${resource} not found: ${identifier}`,
+      customMessage ?? `${resource} not found: ${identifier}`,
       { resource, identifier },
     );
     this.name = "ResourceNotFoundError";
@@ -120,7 +120,7 @@ export function categorizeError(error: Error | unknown): MCPError {
     const message = error.message.toLowerCase();
 
     if (message.includes("timeout") || message.includes("timed out")) {
-      return new TimeoutError("operation", 30000);
+      return new TimeoutError("operation", 30000, error.message);
     }
 
     if (message.includes("rate limit") || message.includes("too many requests")) {
@@ -154,7 +154,7 @@ export function categorizeError(error: Error | unknown): MCPError {
     }
 
     if (message.includes("not found") || message.includes("404")) {
-      return new ResourceNotFoundError("resource", "unknown");
+      return new ResourceNotFoundError("resource", "unknown", error.message);
     }
 
     return new ExternalAPIError(error.message);

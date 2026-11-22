@@ -365,16 +365,30 @@ describe("Core resilience, cache, HTTP client, rate limiter, tracing, logger, er
     expect(categorizeError(new AuthenticationError("unauthorized")).code).toBe(
       ErrorCode.AUTHENTICATION_ERROR,
     );
-    expect(categorizeError(new Error("Operation timed out")).code).toBe(ErrorCode.TIMEOUT_ERROR);
+    const categorizedTimeout = categorizeError(new Error("Operation timed out after 8000ms"));
+    expect(categorizedTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
+    expect(categorizedTimeout.message).toBe("Operation timed out after 8000ms");
     expect(categorizeError(new Error("Too many requests")).code).toBe(ErrorCode.RATE_LIMIT_ERROR);
     expect(categorizeError(new Error("ECONNREFUSED")).code).toBe(ErrorCode.NETWORK_ERROR);
     expect(categorizeError(new Error("Invalid parameter")).code).toBe(ErrorCode.VALIDATION_ERROR);
-    expect(categorizeError(new Error("Resource not found")).code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
+    const categorizedNotFound = categorizeError(
+      new Error("Municipality 99999 not found in TSE turnout data"),
+    );
+    expect(categorizedNotFound.code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
+    expect(categorizedNotFound.message).toBe("Municipality 99999 not found in TSE turnout data");
+    expect(categorizeError(new Error("TSE Resultados API error: HTTP 404")).message).toBe(
+      "TSE Resultados API error: HTTP 404",
+    );
     expect(categorizeError(new Error("API key missing")).code).toBe(ErrorCode.AUTHENTICATION_ERROR);
     expect(categorizeError(new ConfigurationError("cfg")).code).toBe(ErrorCode.CONFIGURATION_ERROR);
-    expect(categorizeError(new ResourceNotFoundError("eleicao", "999")).code).toBe(
-      ErrorCode.RESOURCE_NOT_FOUND,
-    );
+    const directNotFound = new ResourceNotFoundError("eleicao", "999");
+    expect(categorizeError(directNotFound).code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
+    expect(directNotFound.message).toBe("eleicao not found: 999");
+    expect(directNotFound.data).toEqual({ resource: "eleicao", identifier: "999" });
+    const customNotFound = new ResourceNotFoundError("eleicao", "999", "Custom not found message");
+    expect(customNotFound.code).toBe(ErrorCode.RESOURCE_NOT_FOUND);
+    expect(customNotFound.message).toBe("Custom not found message");
+    expect(customNotFound.data).toEqual({ resource: "eleicao", identifier: "999" });
     expect(categorizeError("raw").code).toBe(ErrorCode.INTERNAL_ERROR);
     expect(formatErrorResponse(new ExternalAPIError("err", "tse", 502)).code).toBe(
       ErrorCode.EXTERNAL_API_ERROR,
@@ -403,7 +417,12 @@ describe("Core resilience, cache, HTTP client, rate limiter, tracing, logger, er
     expect((await Result.fromPromise(Promise.reject(new NotFoundError("x")))).ok).toBe(false);
     expect(new ResultRateLimitError("rl", 10).retryAfter).toBe(10);
     expect(new ResultNetworkError("net", 502).statusCode).toBe(502);
-    expect(new McpTimeoutError("op", 100).code).toBe(ErrorCode.TIMEOUT_ERROR);
+    const directTimeout = new McpTimeoutError("op", 100);
+    expect(directTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
+    expect(directTimeout.message).toBe("Operation 'op' timed out after 100ms");
+    const customTimeout = new McpTimeoutError("op", 100, "Custom timeout message");
+    expect(customTimeout.code).toBe(ErrorCode.TIMEOUT_ERROR);
+    expect(customTimeout.message).toBe("Custom timeout message");
     expect(new McpRateLimitError(5).code).toBe(ErrorCode.RATE_LIMIT_ERROR);
     expect(new McpValidationError("v").code).toBe(ErrorCode.VALIDATION_ERROR);
     expect(new NetworkError("n").code).toBe(ErrorCode.NETWORK_ERROR);
