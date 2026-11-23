@@ -15,9 +15,9 @@ Bem-vindo à documentação em português brasileiro do **MCP TSE** (`@aredes.me
 3. **[Exemplos de Uso (`USAGE_EXAMPLES.md`)](../USAGE_EXAMPLES.md)** — Chamadas e saídas reais das 7 ferramentas + cruzamentos com `mcp-dadosbr` e `mcp-orcamento`.
 4. **[Índice geral (`docs/README.md`)](../README.md)** e **[README principal](../../README.md)**.
 
-## Compilação Local e Testes
+## Instalação via npm ou Compilação Local
 
-> **Aviso de distribuição (`2026-11-23`):** `@aredes.me/mcp-tse` ainda não foi publicado no npm (`0.1.0` na branch `main`). Clone e compile localmente até a primeira release.
+> **Distribuição (`2026-11-23`):** [`@aredes.me/mcp-tse`](https://www.npmjs.com/package/@aredes.me/mcp-tse) (`0.1.0`) está publicado no **npm** (`npx -y @aredes.me/mcp-tse`). Para desenvolvimento e build local:
 
 ```bash
 git clone https://github.com/cristianoaredes/mcp-tse.git

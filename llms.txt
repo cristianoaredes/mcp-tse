@@ -2,10 +2,10 @@
 
 > Open-source Model Context Protocol (MCP) server built by Orqo providing 7 read-only, zero-API-key tools for Brazilian electoral data backed directly by Tribunal Superior Eleitoral (TSE) official EA20 results JSON endpoints and Dados Abertos CKAN APIv3.
 
-- Version in codebase (`main`): `0.1.0`
+- Version (`main` & npm `latest`): `0.1.0` (`https://www.npmjs.com/package/@aredes.me/mcp-tse`)
 - License: `AGPL-3.0-only`
-- Runtime targets: Node.js (`>=22.12 || 24 || 26`, `stdio` / `HTTP+SSE`) and Cloudflare Workers (`POST /mcp`, `/sse`, REST `POST /tools/{toolName}`, `GET /openapi.json`, `GET /health`, `GET /`)
-- Distribution status (`2026-11-23`): Not yet published on npm or GitHub Releases; build from source (`npm ci && npm run build && npm run build:worker`) until the first release.
+- Runtime targets: Node.js (`>=22.12 || 24 || 26`, `stdio` / HTTP+SSE) and Cloudflare Workers (`POST /mcp`, `/sse`, REST `POST /tools/{toolName}`, `GET /openapi.json`, `GET /health`, `GET /`)
+- Distribution (`2026-11-23`): Published on npm as `@aredes.me/mcp-tse@0.1.0` (`npx -y @aredes.me/mcp-tse`); GitHub Release tag `v0.1.0` pending release creation.
 
 ## Ferramentas
 

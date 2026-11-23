@@ -4,7 +4,7 @@ All notable changes to `@aredes.me/mcp-tse` are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Status de distribuição (`2026-11-23`):** A versão `0.1.0` está implementada na branch `main` (ainda sem release publicada no GitHub nem pacote publicado no registro npm).
+> **Distribuição (`2026-11-23`):** O pacote [`@aredes.me/mcp-tse`](https://www.npmjs.com/package/@aredes.me/mcp-tse) (`0.1.0`) está publicado no registro npm (`latest: 0.1.0`; criação da release/tag `v0.1.0` no GitHub pendente após o merge do PR de documentação).
 
 ## [Unreleased]
 
@@ -17,7 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
-- (`TCK-0004`) Auditoria completa do `README.md` contra `lib/`: aviso explícito de pacote npm ainda não publicado, documentação fiel dos defaults por grupo de cargo (`TCK-0003` — municipais `ele2024/619`, estaduais `ele2026/6259`, federais `ele2026/6257` vs `ele2026/6257` fixo em `tse_comparecimento_abstencao`), contagem atualizada de testes (`13` suítes / `63` testes), FAQ expandida para SEO/GEO e links em `Documentação adicional`.
+- (`TCK-0004` & `TCK-0005`) Documentação completa alinhada ao código em `lib/` e à publicação `v0.1.0` no npm (badge, guias `npx -y @aredes.me/mcp-tse`, defaults por grupo de cargo em `TCK-0003`, `13` suítes / `63` testes e FAQ expandida).
 - (`TCK-0004`) Atualizados `description` e `keywords` em `package.json` e topics no GitHub (`eleicoes-2026`, `resultados-eleitorais`, `ckan`).
 - (`TCK-0003` / [PR #1](https://github.com/cristianoaredes/mcp-tse/pull/1)) Seleção automática de `ciclo`/`codigo_eleicao` por grupo de cargo em `tse_apuracao_cargo`, `tse_candidatos_busca` e `tse_partidos_federacoes` (`ele2024/619` para prefeito/vereador, `ele2026/6259` para governador/senador/deputados, `ele2026/6257` para presidente) e preservação de mensagens em `categorizeError`.
 
