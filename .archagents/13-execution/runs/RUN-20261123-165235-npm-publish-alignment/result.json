@@ -1,0 +1,132 @@
+{
+  "schema": "result/1",
+  "ticket": "TCK-0005",
+  "run_id": "RUN-20261123-165235-npm-publish-alignment",
+  "gerado_em": "2026-11-23T17:04:32Z",
+  "head": "c81424b217d45f6deae5788649612e8c9f420a6d",
+  "status": "executing",
+  "drive": null,
+  "estados": [
+    {
+      "n": 1,
+      "nome": "Pedido compreendido",
+      "atendido": true,
+      "evidencia": [
+        "ticket em 'executing' (saiu de raw)",
+        "acceptance[]: 2 critério(s)",
+        "restrições registradas: nenhuma"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "evento de rota: não liga a ticket nem a run (não medido)"
+      ]
+    },
+    {
+      "n": 2,
+      "nome": "Execução autorizada",
+      "atendido": null,
+      "evidencia": [
+        "o ticket passou por executing (status 'executing')",
+        "nenhuma restrição read-only"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "run sem drive (guiado à mão): o handoff do designed→executing não foi lido",
+        "budget.json ausente: sem teto de orçamento medido",
+        "max_attempts_total ausente no run: sem teto de tentativas medido"
+      ]
+    },
+    {
+      "n": 3,
+      "nome": "Tarefa executada",
+      "atendido": null,
+      "evidencia": [
+        "7 arquivo(s) alterado(s) no working tree (TCK-3115)"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "actions.jsonl: sem passos de iteração do driver"
+      ]
+    },
+    {
+      "n": 4,
+      "nome": "Requisito comprovado",
+      "atendido": true,
+      "evidencia": [
+        "lock: passes true",
+        "lock fresh: o conteúdo é o que foi verificado",
+        "VER não exigido (ver_required: false)"
+      ],
+      "falta": [],
+      "nao_medido": []
+    },
+    {
+      "n": 5,
+      "nome": "Publicação autorizada",
+      "atendido": null,
+      "evidencia": [
+        "nenhuma restrição no-publish"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "run sem drive: a autonomia não foi registrada",
+        "sessão: as restrições da sessão não são conhecidas aqui (não medido)",
+        "URL de PR: não medida (sem rede)",
+        "autonomia concedida ao operador: não medida aqui (o nível do drive é o --level do ratchet, default L2)"
+      ]
+    }
+  ],
+  "implementado": null,
+  "verificado": true,
+  "publicado": {
+    "valor": null,
+    "motivo": "nenhum commit cita o ticket — sem commits para publicar"
+  },
+  "requisitos": [
+    {
+      "n": 1,
+      "check": "npm run build && npm run build:worker",
+      "expect": "",
+      "lock_passes": true,
+      "freshness": "fresh"
+    },
+    {
+      "n": 2,
+      "check": "npm test",
+      "expect": "",
+      "lock_passes": true,
+      "freshness": "fresh"
+    }
+  ],
+  "arquivos_alterados": [],
+  "arquivos_alterados_total": 0,
+  "pendencias": [],
+  "ver": null,
+  "red_evidence": null,
+  "consumo": {
+    "usd": null,
+    "cost_source": "unknown",
+    "iteracoes": null,
+    "tentativas_total": null,
+    "max_attempts_total": null,
+    "teto_usd": null,
+    "gasto_usd": null,
+    "unknown_spend": null,
+    "drives": null
+  },
+  "nao_medido": [
+    "drive: run sem drive (guiado à mão)",
+    "budget.json: ausente (sem teto de orçamento medido)",
+    "actions.jsonl: sem passos de iteração do driver",
+    "run.json: sem max_attempts_total",
+    "evento de rota: não liga a ticket nem a run (não medido)",
+    "run sem drive (guiado à mão): o handoff do designed→executing não foi lido",
+    "budget.json ausente: sem teto de orçamento medido",
+    "max_attempts_total ausente no run: sem teto de tentativas medido",
+    "run sem drive: a autonomia não foi registrada",
+    "sessão: as restrições da sessão não são conhecidas aqui (não medido)",
+    "URL de PR: não medida (sem rede)",
+    "autonomia concedida ao operador: não medida aqui (o nível do drive é o --level do ratchet, default L2)",
+    "publicado: nenhum commit cita o ticket — sem commits para publicar"
+  ]
+}

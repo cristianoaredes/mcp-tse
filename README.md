@@ -3,7 +3,7 @@
 **Dados eleitorais brasileiros na conversa com IA. Com fonte, proveniência e limites declarados.**
 
 [![by Orqo](https://img.shields.io/badge/by-Orqo-0b1215?style=flat)](https://orqo.pro/)
-[![npm](https://img.shields.io/badge/npm-not%20published%20(v0.1.0)-64748b?style=flat)](#instalação-e-configuração)
+[![npm](https://img.shields.io/npm/v/%40aredes.me%2Fmcp-tse?label=npm&color=0f766e&style=flat)](https://www.npmjs.com/package/@aredes.me/mcp-tse)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-1e293b?style=flat)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-22.12%2B%20%7C%2024%20%7C%2026-334155?style=flat)](package.json)
 [![Tools](https://img.shields.io/badge/tools-7%20%7C%20zero--key%20Worker--safe-0f766e?style=flat)](#catálogo-completo-das-7-ferramentas)
@@ -121,13 +121,13 @@ Cada servidor do portfólio mantém escopo enxuto e Worker-safe para trabalhar e
 
 ## Instalação e configuração
 
-> **Status de distribuição (`2026-11-23`):** O pacote `@aredes.me/mcp-tse` está na versão `0.1.0` na branch `main` e **ainda não foi publicado no npm** (nem em GitHub Releases). Até a primeira publicação no registro npm, utilize a **instalação a partir do código-fonte (seção 2)**.
+> **Distribuição (`2026-11-23`):** O pacote [`@aredes.me/mcp-tse`](https://www.npmjs.com/package/@aredes.me/mcp-tse) (`0.1.0`) está publicado no **npm** e pronto para execução via `npx` (release/tag `v0.1.0` no GitHub pendente do merge deste PR).
 
 **Pré-requisito:** Node.js **22.12 ou posterior na linha 22**, **24** ou **26** (`engines.node` em [`package.json`](package.json#L82-L84)).
 
-### 1. Início rápido via npm *(disponível após publicação)*
+### 1. Início rápido via npm (recomendado)
 
-Após a publicação no npm, em clientes com suporte a `mcpServers` (Claude Desktop, Cursor, Windsurf, Claude Code e compatíveis), você poderá configurar:
+Em clientes compatíveis com `mcpServers` (Claude Desktop, Cursor, Windsurf, Claude Code e equivalentes), adicione:
 
 ```json
 {
@@ -140,24 +140,28 @@ Após a publicação no npm, em clientes com suporte a `mcpServers` (Claude Desk
 }
 ```
 
-Para habilitar o fluxo cruzado hoje (build local de `tse` + `@aredes.me/mcp-dadosbr` publicado no npm):
+Para compor todo o ecossistema `@aredes.me/*` no mesmo host MCP:
 
 ```json
 {
   "mcpServers": {
     "tse": {
-      "command": "node",
-      "args": ["/caminho/absoluto/mcp-tse/build/lib/bin/mcp-tse.js"]
+      "command": "npx",
+      "args": ["-y", "@aredes.me/mcp-tse"]
     },
     "dadosbr": {
       "command": "npx",
       "args": ["-y", "@aredes.me/mcp-dadosbr"]
+    },
+    "orcamento": {
+      "command": "npx",
+      "args": ["-y", "@aredes.me/mcp-orcamento"]
     }
   }
 }
 ```
 
-### 2. A partir do código-fonte (recomendado no momento · desenvolvimento, auditoria ou customização)
+### 2. A partir do código-fonte (desenvolvimento, auditoria ou customização)
 
 ```bash
 git clone https://github.com/cristianoaredes/mcp-tse.git
@@ -182,14 +186,14 @@ Aponte o cliente MCP para o artefato compilado (`build/lib/bin/mcp-tse.js` ou `b
 ### 3. Modo servidor HTTP/SSE local
 
 ```bash
-# Uso local em loopback (127.0.0.1:3000) a partir do build local
-MCP_TRANSPORT=http MCP_HTTP_PORT=3000 node build/lib/bin/mcp-tse.js
+# Uso local em loopback (127.0.0.1:3000) via npm
+MCP_TRANSPORT=http MCP_HTTP_PORT=3000 npx -y @aredes.me/mcp-tse
 
 # Exposição em rede / Docker / VPS (MCP_API_KEY obrigatória fora de loopback)
-MCP_TRANSPORT=http MCP_HTTP_HOST=0.0.0.0 MCP_API_KEY="<sua-chave-secreta>" node build/lib/bin/mcp-tse.js
+MCP_TRANSPORT=http MCP_HTTP_HOST=0.0.0.0 MCP_API_KEY="<sua-chave-secreta>" npx -y @aredes.me/mcp-tse
 
-# Após publicação no npm:
-# MCP_TRANSPORT=http MCP_HTTP_PORT=3000 npx -y @aredes.me/mcp-tse
+# Alternativa a partir do build local:
+# MCP_TRANSPORT=http MCP_HTTP_PORT=3000 node build/lib/bin/mcp-tse.js
 ```
 
 O servidor abre o stream SSE em `GET http://127.0.0.1:3000/mcp` e recebe mensagens JSON-RPC em `POST http://127.0.0.1:3000/messages?sessionId=<id>`, com rate limit de **30 requisições por minuto por IP** ([`lib/adapters/cli-http.ts`](lib/adapters/cli-http.ts#L377-L413)) e proteção de cabeçalhos `Host` e `Origin`.
@@ -275,7 +279,7 @@ flowchart LR
 
 Esta seção declara explicitamente as fronteiras técnicas e jurídicas antes da adoção:
 
-- **Não possui pacote publicado no npm nesta data (`2026-11-23`).** A versão `0.1.0` está disponível na branch `main` e exige compilação local (`npm ci && npm run build`) até o lançamento oficial da primeira release.
+- **Não requer chaves de API externas nem configuração para leitura via `stdio`.** As consultas de produção em HTTP público/VPS exigem `MCP_API_KEY` e configuração de secrets no ambiente de deploy; também suporta build local opcional (`npm ci && npm run build`) para desenvolvimento e auditoria.
 - **Não consulta nem contorna `divulgacandcontas.tse.jus.br` (Akamai WAF HTTP `403`).** Clientes automatizados recebem bloqueio `403`; o servidor nunca tenta burlar o WAF e retorna `upstream_waf_notice` em `tse_dados_abertos_datasets` orientando o uso dos pacotes abertos em `cdn.tse.jus.br`.
 - **Não faz download nem streaming de ZIPs/CSVs completos dentro do Cloudflare Worker.** Para respeitar o orçamento stateless (`< 128 MB` RAM) na borda, `tse_dados_abertos_datasets` consulta metadados do CKAN e devolve as URLs oficiais em `cdn.tse.jus.br` para processamento externo.
 - **Depende da disponibilidade e da indexação dos arquivos EA20 pelo TSE.** Eleições antigas ausentes de `ele-c.json` ou indisponibilidades momentâneas do TSE produzem erro explícito (`isError: true`) sem inventar resultados nem gravar falhas em cache.
@@ -301,7 +305,7 @@ Artefatos verificáveis deste repositório:
 ## Perguntas diretas
 
 **Como consultar resultados eleitorais do TSE no Claude Desktop, Claude Code ou Cursor?**
-Como o pacote ainda não foi publicado no npm, clone o repositório e compile localmente (`npm ci && npm run build`), adicionando `build/lib/bin/mcp-tse.js` na seção `mcpServers` do cliente. A partir daí, basta perguntar sobre eleições municipais, estaduais ou presidenciais em linguagem natural. Confira os modelos prontos de configuração em [`docs/MCP_CLIENT_INTEGRATION.md`](docs/MCP_CLIENT_INTEGRATION.md).
+Configure `"command": "npx", "args": ["-y", "@aredes.me/mcp-tse"]` na seção `mcpServers` do cliente (ou compile localmente com `npm ci && npm run build` apontando para `build/lib/bin/mcp-tse.js`). A partir daí, basta perguntar sobre eleições municipais, estaduais ou presidenciais em linguagem natural. Confira os modelos prontos de configuração em [`docs/MCP_CLIENT_INTEGRATION.md`](docs/MCP_CLIENT_INTEGRATION.md).
 
 **Preciso de alguma chave de API para usar o MCP TSE?**
 Não. Todas as 7 ferramentas (`tse_eleicoes_catalogo`, `tse_municipios_zonas`, `tse_apuracao_cargo`, `tse_candidatos_busca`, `tse_partidos_federacoes`, `tse_comparecimento_abstencao` e `tse_dados_abertos_datasets`) consultam endpoints públicos oficiais do TSE sem chave nem cadastro prévio. `MCP_API_KEY` só é necessária se você expuser o servidor HTTP/Worker em rede.
@@ -372,7 +376,7 @@ O MCP TSE realiza consultas sob demanda a fontes públicas eleitorais do TSE e n
 
 - **7 zero-key tools:** election cycle catalog (`tse_eleicoes_catalogo`), 5-digit TSE ↔ 7-digit IBGE municipality & electoral zone translation (`tse_municipios_zonas`), paginated section tallies and candidate rankings (`tse_apuracao_cargo`), candidate and running-mate search (`tse_candidatos_busca`), party & federation aggregations (`tse_partidos_federacoes`), voter turnout/abstention summaries (`tse_comparecimento_abstencao`), and CKAN open-data package discovery with `cdn.tse.jus.br` links (`tse_dados_abertos_datasets`). Nominal tally/search/party tools use cargo-aware election defaults (`ele2024/619` municipal, `ele2026/6259` state, `ele2026/6257` presidential).
 - **Dual execution perimeters:** Node.js CLI (`stdio` or `HTTP/SSE`, with strict `stdout` JSON-RPC isolation and fail-closed `MCP_API_KEY` outside loopback) and Cloudflare Worker (`POST /mcp`, `GET|POST /sse`, `POST /tools/{toolName}` REST, `GET /openapi.json`, `GET /health`, `GET /`).
-- **Distribution & Quick start (Node.js 22.12+, 24, or 26):** `@aredes.me/mcp-tse` is currently `0.1.0` on `main` and **not yet published on npm**. Build from source (`git clone https://github.com/cristianoaredes/mcp-tse.git && npm ci && npm run build && npm run build:worker`) and point `mcpServers.tse` to `build/lib/bin/mcp-tse.js` (or `npx -y @aredes.me/mcp-tse` once published). See [`docs/`](docs/README.md), [`CHANGELOG.md`](CHANGELOG.md), [`llms.txt`](llms.txt), and [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- **Distribution & Quick start (Node.js 22.12+, 24, or 26):** `@aredes.me/mcp-tse` (`0.1.0`) is published on [npm](https://www.npmjs.com/package/@aredes.me/mcp-tse) — configure `mcpServers.tse` with `"command": "npx", "args": ["-y", "@aredes.me/mcp-tse"]`. To build from source instead (`git clone https://github.com/cristianoaredes/mcp-tse.git && npm ci && npm run build && npm run build:worker`), point to `build/lib/bin/mcp-tse.js`. See [`docs/`](docs/README.md), [`CHANGELOG.md`](CHANGELOG.md), [`llms.txt`](llms.txt), and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Explicit boundaries:** never queries or bypasses the Akamai WAF (`HTTP 403`) on `divulgacandcontas.tse.jus.br`, does not stream full CKAN ZIP/CSV archives inside the stateless Worker, enforces SSRF host allowlists (`resultados.tse.jus.br`, `dadosabertos.tse.jus.br`, `cdn.tse.jus.br`), ships text JSON responses only (no `ui://` MCP Apps; `resources/list` is empty), and attaches `lgpd_notice` (LGPD Art. 20) on nominal lookups.
 - **Governed in the open:** built with **[Codebase OPS by Orqo](https://orqo.pro/en/)** — full specification, design, execution run, and independent P10 verification live in [`.archagents/`](.archagents/README.md).
 - **License & Privacy:** [GNU AGPL-3.0-only](LICENSE) (network copyleft), third-party notices in [`NOTICE.md`](NOTICE.md), and LGPD transparency policy in [`PRIVACY.md`](PRIVACY.md).

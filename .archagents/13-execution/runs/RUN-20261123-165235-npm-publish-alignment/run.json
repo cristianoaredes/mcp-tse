@@ -1,0 +1,30 @@
+{
+  "id": "RUN-20261123-165235-npm-publish-alignment",
+  "design": "DES-0005",
+  "ticket": "TCK-0005",
+  "started_at": "2026-11-23T16:52:35Z",
+  "started_by": "ops",
+  "environment": "dev",
+  "mode": "live",
+  "status": "completed",
+  "current_step": 3,
+  "total_steps": 3,
+  "ended_at": "2026-11-23T17:04:31Z",
+  "result": "success",
+  "loop_iterations": 0,
+  "attempt_count": 0,
+  "lessons_consulted": [],
+  "loop_cost_usd": null,
+  "cost_source": "unknown",
+  "loop_strategy": "default",
+  "context_peak": 0,
+  "final_judge_delta": 42,
+  "warmup": false,
+  "final_judge_delta_source": "judge",
+  "lesson_utility": {
+    "utility": 0.0,
+    "n_lessons": 0,
+    "lessons_consulted": [],
+    "signal": "no-lessons"
+  }
+}
