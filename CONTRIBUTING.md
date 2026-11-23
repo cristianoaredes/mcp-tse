@@ -15,7 +15,7 @@ Damos as boas-vindas a contribuições de desenvolvedores, pesquisadores e jorna
 
 ### Início rápido
 
-Use **Node.js 22.12+**, **24** ou **26** (`engines.node` em [`package.json`](package.json#L76-L78)).
+Use **Node.js 22.12+**, **24** ou **26** (`engines.node` em [`package.json`](package.json#L82-L84)).
 
 1. **Faça um fork** do repositório no GitHub.
 2. **Clone** o seu fork:
@@ -94,7 +94,7 @@ We welcome contributions from developers, researchers, and data journalists! Thi
 
 ### Quick Start
 
-Use **Node.js 22.12+**, **24**, or **26** (`engines.node` in [`package.json`](package.json#L76-L78)).
+Use **Node.js 22.12+**, **24**, or **26** (`engines.node` in [`package.json`](package.json#L82-L84)).
 
 1. **Fork** the repository on GitHub.
 2. **Clone** your fork:

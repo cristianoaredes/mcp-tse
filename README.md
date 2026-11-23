@@ -3,18 +3,19 @@
 **Dados eleitorais brasileiros na conversa com IA. Com fonte, proveniência e limites declarados.**
 
 [![by Orqo](https://img.shields.io/badge/by-Orqo-0b1215?style=flat)](https://orqo.pro/)
-[![npm](https://img.shields.io/npm/v/%40aredes.me%2Fmcp-tse?label=npm&color=0f766e&style=flat)](https://www.npmjs.com/package/@aredes.me/mcp-tse)
+[![npm](https://img.shields.io/badge/npm-not%20published%20(v0.1.0)-64748b?style=flat)](#instalação-e-configuração)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-1e293b?style=flat)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-22.12%2B%20%7C%2024%20%7C%2026-334155?style=flat)](package.json)
 [![Tools](https://img.shields.io/badge/tools-7%20%7C%20zero--key%20Worker--safe-0f766e?style=flat)](#catálogo-completo-das-7-ferramentas)
 
-[O problema](#o-problema) · [7 ferramentas](#catálogo-completo-das-7-ferramentas) · [Ecossistema](#sinergia-no-ecossistema-aredesme) · [Perímetro](#perímetro-de-execução) · [Instalação](#instalação-e-configuração) · [Por dentro](#como-funciona-por-dentro) · [O que não faz](#honestidade-o-que-o-mcp-tse-não-faz) · [Governança](#governança-construído-com-codebase-ops-by-orqo) · [AGPL-3.0](#licença-gnu-agpl-30) · [Privacidade](#privacidade-e-lgpd) · [English](#english)
+[O problema](#o-problema) · [Experimente](#experimente-em-uma-conversa) · [7 ferramentas](#catálogo-completo-das-7-ferramentas) · [Ecossistema](#sinergia-no-ecossistema-aredesme) · [Perímetro](#perímetro-de-execução) · [Instalação](#instalação-e-configuração) · [Por dentro](#como-funciona-por-dentro) · [O que não faz](#honestidade-o-que-o-mcp-tse-não-faz) · [Governança](#governança-construído-com-codebase-ops-by-orqo) · [Perguntas](#perguntas-diretas) · [AGPL-3.0](#licença-gnu-agpl-30) · [Privacidade](#privacidade-e-lgpd) · [English](#english)
 
 ---
 
-O **MCP TSE** (`@aredes.me/mcp-tse`) é um servidor open source do [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) desenvolvido pela [Orqo](https://orqo.pro/) que conecta assistentes de IA a **7 consultas estruturadas de dados eleitorais públicos do Tribunal Superior Eleitoral (TSE)** — cobrindo os arquivos estáticos oficiais da arquitetura **EA20** (`resultados.tse.jus.br`) e o catálogo **Dados Abertos CKAN APIv3** (`dadosabertos.tse.jus.br` / `cdn.tse.jus.br`).
+O **MCP TSE** (`@aredes.me/mcp-tse`, `v0.1.0`) é um servidor open source do [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) desenvolvido pela [Orqo](https://orqo.pro/) que conecta assistentes de IA como Claude, Cursor, Windsurf e VS Code a **7 ferramentas somente leitura e sem chave de API para dados eleitorais públicos do Tribunal Superior Eleitoral (TSE)** — cobrindo os arquivos estáticos oficiais da arquitetura **EA20** (`resultados.tse.jus.br`) e o catálogo **Dados Abertos CKAN APIv3** (`dadosabertos.tse.jus.br` / `cdn.tse.jus.br`).
 
 - **Zero chave de API em 100% das 7 ferramentas** — catálogo de eleições, tradução TSE↔IBGE e zonas eleitorais, apuração por cargo, busca nominal de candidatos, consolidação de partidos/federações, comparecimento/abstenção e busca no CKAN funcionam sem cadastro ou token prévio.
+- **Defaults inteligentes por cargo (`TCK-0003`)** — `tse_apuracao_cargo`, `tse_candidatos_busca` e `tse_partidos_federacoes` selecionam automaticamente `ele2024/619` para cargos municipais, `ele2026/6259` para estaduais/distritais e `ele2026/6257` para `presidente` quando `ciclo`/`codigo_eleicao` são omitidos.
 - **Proveniência explícita, sanitização e LGPD** — toda resposta inclui `source`, `source_url`, `fetchedAt` em UTC e `untrusted_data_notice` ([`lib/shared/agentic-guard.ts`](lib/shared/agentic-guard.ts#L9-L10)), além de `lgpd_notice` obrigatório (LGPD Art. 20) nas consultas nominais de `tse_apuracao_cargo` e `tse_candidatos_busca`.
 - **Paridade Node.js e Cloudflare Worker** — CLI local (`stdio` e `HTTP/SSE`) ou Worker serverless com JSON-RPC (`POST /mcp`), streaming (`GET|POST /sse`), REST direto (`POST /tools/{toolName}`), OpenAPI 3.0 (`GET /openapi.json`) e saúde (`GET /health`).
 - **Software livre AGPL-3.0 com rastro público** — desenvolvido e verificado com [Codebase OPS by Orqo](https://orqo.pro/) em [`.archagents/`](.archagents/README.md).
@@ -40,15 +41,15 @@ Pedir resultados eleitorais, números de urna ou códigos municipais "de memóri
 ## Experimente em uma conversa
 
 1. **Descobrir o pleito e traduzir código IBGE ↔ TSE:**
-   > *"Liste as eleições de 2024 no catálogo do TSE (`tse_eleicoes_catalogo`) e traduza o código IBGE `3106200` para código TSE e zonas eleitorais usando `tse_municipios_zonas`."*
+   > *"Liste as eleições no catálogo do TSE (`tse_eleicoes_catalogo`) e traduza o código IBGE `3106200` (Belo Horizonte) para código TSE e zonas eleitorais usando `tse_municipios_zonas`."*
 2. **Consultar apuração paginada por cargo e seções totalizadas:**
-   > *"Mostre a apuração para prefeito em Belo Horizonte (`codigo_eleicao: 619`, `ciclo: ele2024`, `uf: mg`, `codigo_tse_municipio: 41238`) com percentual de seções totalizadas, brancos/nulos e os 10 candidatos mais votados."*
+   > *"Mostre a apuração para prefeito em Belo Horizonte (`uf: mg`, `codigo_tse_municipio: 41238`) — ou para `cargo: presidente` — com percentual de seções totalizadas, brancos/nulos e os candidatos mais votados."*
 3. **Buscar candidato, vice/suplente ou consolidação por partido e federação:**
-   > *"Use `tse_candidatos_busca` para localizar candidatos eleitos e seus vices/suplentes na disputa informada, e compare o total nominal e de legenda em `tse_partidos_federacoes`."*
+   > *"Use `tse_candidatos_busca` para localizar candidatos eleitos e seus vices/suplentes na disputa municipal ou estadual, e compare o total nominal e de legenda em `tse_partidos_federacoes`."*
 4. **Verificar comparecimento e abstenção por UF ou município:**
-   > *"Consulte em `tse_comparecimento_abstencao` o eleitorado apto, o comparecimento e a taxa de abstenção agregada de `uf: sp` ou de um município específico."*
+   > *"Consulte em `tse_comparecimento_abstencao` o eleitorado apto, o comparecimento e a taxa de abstenção agregada de `uf: sp` ou de São Paulo capital (`codigo_tse_municipio: 71072`)."*
 5. **Localizar datasets abertos e cruzar `codigo_ibge` e `CNPJ` no ecossistema `@aredes.me/*`:**
-   > *"Pesquise pacotes de prestação de contas e candidaturas de 2024 no CKAN com `tse_dados_abertos_datasets`, use o `codigo_ibge` obtido no `mcp-tse` para cruzar despesas municipais no `@aredes.me/mcp-orcamento` e valide o CNPJ de doadores ou fornecedores de campanha com `cnpj_lookup` no `@aredes.me/mcp-dadosbr`."*
+   > *"Pesquise pacotes de prestação de contas com `tse_dados_abertos_datasets`, use o `codigo_ibge` obtido no `mcp-tse` para cruzar despesas municipais no `@aredes.me/mcp-orcamento` e valide o CNPJ de doadores ou fornecedores de campanha com `cnpj_lookup` no `@aredes.me/mcp-dadosbr`."*
 
 ---
 
@@ -65,12 +66,14 @@ Todas as 7 ferramentas registradas em [`lib/tools/index.ts`](lib/tools/index.ts)
 
 ### Apuração, candidaturas, partidos e comparecimento EA20 (4)
 
+Nas ferramentas `tse_apuracao_cargo`, `tse_candidatos_busca` e `tse_partidos_federacoes`, omitir `ciclo`/`codigo_eleicao` aplica o pleito padrão do grupo de `cargo` ([`lib/shared/tse-schemas.ts`](lib/shared/tse-schemas.ts#L46-L75)): **municipais** (`prefeito`, `vereador`) → `ele2024` / `619`; **estaduais e distrital** (`governador`, `senador`, `deputado_federal`, `deputado_estadual`, `deputado_distrital`) → `ele2026` / `6259`; **federal** (`presidente`) → `ele2026` / `6257`. Ao informar um `ciclo` diferente do padrão do cargo, `codigo_eleicao` passa a ser obrigatório. Já `tse_comparecimento_abstencao` utiliza padrão fixo `ele2026` / `6257`.
+
 | Ferramenta | Parâmetros e limites principais | Fonte oficial | Retorno e avisos |
 | --- | --- | --- | --- |
-| `tse_apuracao_cargo` | `cargo` (obrigatório: `presidente`, `governador`, `senador`, `deputado_federal`, `deputado_estadual`, `deputado_distrital`, `prefeito`, `vereador`), `ciclo` (`ele2026`), `codigo_eleicao` (`6257`), `uf` (obrigatória para cargos estaduais/municipais), `codigo_tse_municipio` (obrigatório para `prefeito`/`vereador`), `page` (`1`–`100`), `limit` (`1`–`50`, padrão `25`) | EA20 `-u.json` (`dados/{uf}/{prefix}-c{cargo}-e{ele6}-u.json`) | Resumo de `secoes`, `eleitorado`, `votos`, `pagination`, `candidatos[]` ordenados por votos + `vices_suplentes[]`, **`lgpd_notice` (Art. 20)** e `untrusted_data_notice` |
-| `tse_candidatos_busca` | Mesmo escopo de `tse_apuracao_cargo` + filtros `nome` (`2`–`120` chars, busca titular e `vices_suplentes[]`), `numero` (`2`–`5` dígitos), `partido` (`1`–`30` chars), `apenas_eleitos` (boolean, padrão `false`), `limit` (`1`–`50`, padrão `20`) | EA20 `-u.json` | `candidatos[]` filtrados com `sq_candidato`, situação, votos, `vices_suplentes[]`, **`lgpd_notice` (Art. 20)** e `untrusted_data_notice` |
-| `tse_partidos_federacoes` | Mesmo escopo de `tse_apuracao_cargo` + `partido` opcional (sigla, nome ou número, `1`–`30` chars), `limit` (`1`–`50`, padrão `25`) | EA20 `-u.json` | `federacoes[]` (`composicao`, `numeros_partidos`) e `partidos[]` (`tvtn`, `tvan`, `votos_legenda`, `total_candidatos`, `total_eleitos`) |
-| `tse_comparecimento_abstencao` | `ciclo` (`ele2026`), `codigo_eleicao` (`6257`), `uf` (`br` padrão ou UF), `codigo_tse_municipio` (5 dígitos; exige `uf != br`) | EA20 `-ab.json` (`dados/{uf}/{uf}-e{ele6}-ab.json`) | `resumo_agregado` (quando sem município) e `abr[]` limitado a **100 entradas** ([`MAX_AB_RETURNED`](lib/tools/tse-resultados.ts#L38)) com `truncated` e `truncation_notice` |
+| `tse_apuracao_cargo` | `cargo` (obrigatório: `presidente`, `governador`, `senador`, `deputado_federal`, `deputado_estadual`, `deputado_distrital`, `prefeito`, `vereador`), `ciclo` / `codigo_eleicao` (defaults por cargo), `uf` (obrigatória para cargos estaduais/municipais), `codigo_tse_municipio` (5 dígitos, obrigatório para `prefeito`/`vereador`), `page` (`1`–`100`, padrão `1`), `limit` (`1`–`50`, padrão `25`) | EA20 `-u.json` (`dados/{uf}/{prefix}-c{cargo}-e{ele6}-u.json`) | Resumo de `secoes`, `eleitorado`, `votos`, `pagination`, `candidatos[]` ordenados por votos + `vices_suplentes[]`, **`lgpd_notice` (Art. 20)** e `untrusted_data_notice` |
+| `tse_candidatos_busca` | Mesmo escopo e defaults por cargo de `tse_apuracao_cargo` + filtros `nome` (`2`–`120` chars, busca titular e `vices_suplentes[]`), `numero` (`2`–`5` dígitos), `partido` (`1`–`30` chars), `apenas_eleitos` (boolean, padrão `false`), `limit` (`1`–`50`, padrão `20`) | EA20 `-u.json` | `candidatos[]` filtrados com `sq_candidato`, situação, votos, `vices_suplentes[]`, **`lgpd_notice` (Art. 20)** e `untrusted_data_notice` |
+| `tse_partidos_federacoes` | Mesmo escopo e defaults por cargo de `tse_apuracao_cargo` + `partido` opcional (sigla, nome ou número, `1`–`30` chars), `limit` (`1`–`50`, padrão `25`) | EA20 `-u.json` | `federacoes[]` (`composicao`, `numeros_partidos`) e `partidos[]` (`tvtn`, `tvan`, `votos_legenda`, `total_candidatos`, `total_eleitos`) |
+| `tse_comparecimento_abstencao` | `ciclo` (padrão fixo `ele2026`), `codigo_eleicao` (padrão fixo `6257`), `uf` (`br` padrão ou UF), `codigo_tse_municipio` (5 dígitos; exige `uf != br`) | EA20 `-ab.json` (`dados/{uf}/{uf}-e{ele6}-ab.json`) | `resumo_agregado` (quando sem município) e `abr[]` limitado a **100 entradas** ([`MAX_AB_RETURNED`](lib/tools/tse-resultados.ts#L38)) com `truncated` e `truncation_notice` |
 
 ### Dados abertos CKAN e cruzamento investigativo (1)
 
@@ -89,8 +92,8 @@ Cada servidor do portfólio mantém escopo enxuto e Worker-safe para trabalhar e
 | Servidor MCP | Papel na análise pública | Ponte prática com o `mcp-tse` |
 | --- | --- | --- |
 | **`@aredes.me/mcp-tse`** | Catálogo de pleitos, zonas, apuração EA20, candidaturas, partidos e pacotes CKAN | Ponto de partida eleitoral; fornece `codigo_ibge` (`tse_municipios_zonas`) e links de prestação de contas (`tse_dados_abertos_datasets`) |
-| **`@aredes.me/mcp-dadosbr`** | Cadastro de empresas (`cnpj_lookup`), sanções CEIS/CNEP/TCU, IBGE, PNCP e Querido Diário | Recomendado pelo próprio `CROSS_MCP_CNPJ_HINT` ([`lib/tools/tse-ckan.ts`](lib/tools/tse-ckan.ts#L22-L23)) para auditar CNPJs de doadores e fornecedores de campanha |
-| **`@aredes.me/mcp-orcamento`** | Orçamento público, receitas e despesas federais/subnacionais | Recebe o `codigo_ibge` (7 dígitos) traduzido pelo `mcp-tse` para cruzar geografia eleitoral com execução orçamentária |
+| [`@aredes.me/mcp-dadosbr`](https://github.com/cristianoaredes/mcp-dadosbr) | Cadastro de empresas (`cnpj_lookup`), sanções CEIS/CNEP/TCU, IBGE, PNCP e Querido Diário | Recomendado pelo próprio `CROSS_MCP_CNPJ_HINT` ([`lib/tools/tse-ckan.ts`](lib/tools/tse-ckan.ts#L22-L23)) para auditar CNPJs de doadores e fornecedores de campanha |
+| [`@aredes.me/mcp-orcamento`](https://github.com/cristianoaredes/mcp-orcamento) | Orçamento público, LRF (SICONFI) e transferências federais | Recebe o `codigo_ibge` (7 dígitos) traduzido pelo `mcp-tse` para cruzar geografia eleitoral com execução orçamentária |
 | **`@aredes.me/mcp-camara` & `@aredes.me/mcp-senado`** | Proposições, votações nominais e atividade parlamentar no Congresso Nacional | Continua o acompanhamento de deputados federais e senadores eleitos após a apuração obtida no `mcp-tse` |
 
 ---
@@ -118,11 +121,13 @@ Cada servidor do portfólio mantém escopo enxuto e Worker-safe para trabalhar e
 
 ## Instalação e configuração
 
-**Pré-requisito:** Node.js **22.12 ou posterior na linha 22**, **24** ou **26** (`engines.node` em [`package.json`](package.json#L76-L78)).
+> **Status de distribuição (`2026-11-23`):** O pacote `@aredes.me/mcp-tse` está na versão `0.1.0` na branch `main` e **ainda não foi publicado no npm** (nem em GitHub Releases). Até a primeira publicação no registro npm, utilize a **instalação a partir do código-fonte (seção 2)**.
 
-### 1. Início rápido via npm
+**Pré-requisito:** Node.js **22.12 ou posterior na linha 22**, **24** ou **26** (`engines.node` em [`package.json`](package.json#L82-L84)).
 
-Em clientes com suporte a `mcpServers` (Claude Desktop, Cursor, Windsurf, Claude Code e compatíveis), configure apenas o `mcp-tse`:
+### 1. Início rápido via npm *(disponível após publicação)*
+
+Após a publicação no npm, em clientes com suporte a `mcpServers` (Claude Desktop, Cursor, Windsurf, Claude Code e compatíveis), você poderá configurar:
 
 ```json
 {
@@ -135,14 +140,14 @@ Em clientes com suporte a `mcpServers` (Claude Desktop, Cursor, Windsurf, Claude
 }
 ```
 
-Ou habilite o fluxo cruzado com o `@aredes.me/mcp-dadosbr` no mesmo arquivo de configuração:
+Para habilitar o fluxo cruzado hoje (build local de `tse` + `@aredes.me/mcp-dadosbr` publicado no npm):
 
 ```json
 {
   "mcpServers": {
     "tse": {
-      "command": "npx",
-      "args": ["-y", "@aredes.me/mcp-tse"]
+      "command": "node",
+      "args": ["/caminho/absoluto/mcp-tse/build/lib/bin/mcp-tse.js"]
     },
     "dadosbr": {
       "command": "npx",
@@ -152,23 +157,23 @@ Ou habilite o fluxo cruzado com o `@aredes.me/mcp-dadosbr` no mesmo arquivo de c
 }
 ```
 
-### 2. A partir do código-fonte (desenvolvimento, auditoria ou customização)
+### 2. A partir do código-fonte (recomendado no momento · desenvolvimento, auditoria ou customização)
 
 ```bash
 git clone https://github.com/cristianoaredes/mcp-tse.git
 cd mcp-tse
 npm ci
-npm run build
+npm run build && npm run build:worker
 ```
 
-Aponte o cliente MCP para o artefato compilado (`build/lib/adapters/cli.js` ou `build/lib/bin/mcp-tse.js`):
+Aponte o cliente MCP para o artefato compilado (`build/lib/bin/mcp-tse.js` ou `build/lib/adapters/cli.js`):
 
 ```json
 {
   "mcpServers": {
     "tse": {
       "command": "node",
-      "args": ["/caminho/absoluto/mcp-tse/build/lib/adapters/cli.js"]
+      "args": ["/caminho/absoluto/mcp-tse/build/lib/bin/mcp-tse.js"]
     }
   }
 }
@@ -177,11 +182,14 @@ Aponte o cliente MCP para o artefato compilado (`build/lib/adapters/cli.js` ou `
 ### 3. Modo servidor HTTP/SSE local
 
 ```bash
-# Uso local em loopback (127.0.0.1:3000)
-MCP_TRANSPORT=http MCP_HTTP_PORT=3000 npx -y @aredes.me/mcp-tse
+# Uso local em loopback (127.0.0.1:3000) a partir do build local
+MCP_TRANSPORT=http MCP_HTTP_PORT=3000 node build/lib/bin/mcp-tse.js
 
 # Exposição em rede / Docker / VPS (MCP_API_KEY obrigatória fora de loopback)
-MCP_TRANSPORT=http MCP_HTTP_HOST=0.0.0.0 MCP_API_KEY="<sua-chave-secreta>" npx -y @aredes.me/mcp-tse
+MCP_TRANSPORT=http MCP_HTTP_HOST=0.0.0.0 MCP_API_KEY="<sua-chave-secreta>" node build/lib/bin/mcp-tse.js
+
+# Após publicação no npm:
+# MCP_TRANSPORT=http MCP_HTTP_PORT=3000 npx -y @aredes.me/mcp-tse
 ```
 
 O servidor abre o stream SSE em `GET http://127.0.0.1:3000/mcp` e recebe mensagens JSON-RPC em `POST http://127.0.0.1:3000/messages?sessionId=<id>`, com rate limit de **30 requisições por minuto por IP** ([`lib/adapters/cli-http.ts`](lib/adapters/cli-http.ts#L377-L413)) e proteção de cabeçalhos `Host` e `Origin`.
@@ -206,7 +214,7 @@ Exemplo com `.mcprc.json` baseado em [`.mcprc.example.json`](.mcprc.example.json
 }
 ```
 
-**Hosts permitidos na allowlist SSRF** ([`lib/config/index.ts`](lib/config/index.ts#L16-L80) — HTTPS obrigatório, sem credenciais embutidas na URL; `localhost`/`127.0.0.1` só são aceitos quando `NODE_ENV` é `development` ou `test`):
+**Hosts permitidos na allowlist SSRF** ([`lib/config/index.ts`](lib/config/index.ts#L16-L104) — HTTPS obrigatório, sem credenciais embutidas na URL; `localhost`/`127.0.0.1` só são aceitos quando `NODE_ENV` é `development` ou `test`):
 
 - **TSE Resultados (`TSE_RESULTADOS_BASE_URL`):** `resultados.tse.jus.br`, `cdn.tse.jus.br` (e subdomínios).
 - **TSE CKAN (`TSE_CKAN_BASE_URL`):** `dadosabertos.tse.jus.br`, `cdn.tse.jus.br` (e subdomínios).
@@ -236,7 +244,7 @@ Exemplo com `.mcprc.json` baseado em [`.mcprc.example.json`](.mcprc.example.json
 | `MCP_TRUST_X_FORWARDED_FOR` | `false` | No Worker, usa `X-Forwarded-For` como fallback quando `CF-Connecting-IP` não estiver presente. |
 | `MCP_MAX_TOOL_OUTPUT_CHARS` | `100000` | Teto máximo de caracteres do JSON serializado de saída (mínimo `1024`). |
 | `MCP_DPO_CONTACT` | `See PRIVACY.md (LGPD Art. 41)` | Contato do Encarregado/DPO exposto em `GET /` no Cloudflare Worker. |
-| `LOG_LEVEL` / `NODE_ENV` | `info` / *(não definido)* | `LOG_LEVEL` (`debug`/`info`/`warn`/`error`, padrão `debug` em `development`); `NODE_ENV=production` mascara IPs e suprime `[DEBUG]`. |
+| `LOG_LEVEL` / `NODE_ENV` | `info` / *(não definido)* | `LOG_LEVEL` (`debug`/`info`/`warn`/`error`, padrão `debug` apenas quando `NODE_ENV === "development"`, senão `info`); `NODE_ENV=production` mascara IPs e desativa o helper `[DEBUG]` de `cli.ts`. |
 
 **Deploy no Cloudflare Workers ([`wrangler.toml`](wrangler.toml)):** valide o build Web-standard com `npm run build:worker` (`build/lib/workers/worker.js`), substitua os namespaces KV placeholder (`00000000000000000000000000000001` e `00000000000000000000000000000002`) por IDs reais provisionados para `MCP_CACHE` e `MCP_KV`, configure `npx wrangler secret put MCP_API_KEY` e publique via `npm run deploy` ou `npm run deploy:staging`.
 
@@ -267,6 +275,7 @@ flowchart LR
 
 Esta seção declara explicitamente as fronteiras técnicas e jurídicas antes da adoção:
 
+- **Não possui pacote publicado no npm nesta data (`2026-11-23`).** A versão `0.1.0` está disponível na branch `main` e exige compilação local (`npm ci && npm run build`) até o lançamento oficial da primeira release.
 - **Não consulta nem contorna `divulgacandcontas.tse.jus.br` (Akamai WAF HTTP `403`).** Clientes automatizados recebem bloqueio `403`; o servidor nunca tenta burlar o WAF e retorna `upstream_waf_notice` em `tse_dados_abertos_datasets` orientando o uso dos pacotes abertos em `cdn.tse.jus.br`.
 - **Não faz download nem streaming de ZIPs/CSVs completos dentro do Cloudflare Worker.** Para respeitar o orçamento stateless (`< 128 MB` RAM) na borda, `tse_dados_abertos_datasets` consulta metadados do CKAN e devolve as URLs oficiais em `cdn.tse.jus.br` para processamento externo.
 - **Depende da disponibilidade e da indexação dos arquivos EA20 pelo TSE.** Eleições antigas ausentes de `ele-c.json` ou indisponibilidades momentâneas do TSE produzem erro explícito (`isError: true`) sem inventar resultados nem gravar falhas em cache.
@@ -285,20 +294,26 @@ Artefatos verificáveis deste repositório:
 
 - **[`SPC-0001` — Especificação do catálogo `v0.1.0`](.archagents/12-inception/specs/SPC-0001-mcp-tse-v010-catalog.md):** definição dos contratos Zod `.strict()`, paridade dual-runtime, política anti-bypass de WAF e escopo das 7 ferramentas.
 - **[`TCK-0001`](.archagents/15-backlog/tickets/TCK-0001-spc-0001-implementacao-inicial-mcp-tse-v0-1-0-7-tools-worker-safe-ea20-ckan.md) & [`DES-0001`](.archagents/16-designs/DES-0001-spc-0001-implementacao-inicial-mcp-tse-v0-1-0-7-tools-worker-safe-ea20-ckan.md):** backlog, modelo de ameaças (`T1`–`T6`) e plano de execução da `v0.1.0`.
-- **[`VER-20261121-182723-tck-0001`](.archagents/14-verify/reports/VER-20261121-182723-tck-0001.md):** verificação independente P10 aprovada com `62/62` testes Vitest em 13 suítes (`96.85%` stmts / `88.16%` branches / `98.41%` funcs / `97.76%` lines), `5/5` critérios em `criteria-check.py`, `0` violações na allowlist [`.archagents/mcp-tool-allowlist.json`](.archagents/mcp-tool-allowlist.json) (`MCP-TOOL-01`..`07`) e bundle Worker de `6,494` bytes.
+- **[`VER-20261121-182723-tck-0001`](.archagents/14-verify/reports/VER-20261121-182723-tck-0001.md) & [`VER-20261122-021543-tck-0003`](.archagents/14-verify/reports/VER-20261122-021543-tck-0003.md):** verificação independente P10 aprovada após a integração do [`PR #1`](https://github.com/cristianoaredes/mcp-tse/pull/1) (`TCK-0003`: defaults automáticos por grupo de cargo e preservação de mensagens em `categorizeError`), comprovando **`63/63` testes Vitest em `13/13` suítes**, `npm run test:transport`, `tsc` Node/Worker e chamadas reais via `StdioClientTransport`.
 
 ---
 
 ## Perguntas diretas
 
+**Como consultar resultados eleitorais do TSE no Claude Desktop, Claude Code ou Cursor?**
+Como o pacote ainda não foi publicado no npm, clone o repositório e compile localmente (`npm ci && npm run build`), adicionando `build/lib/bin/mcp-tse.js` na seção `mcpServers` do cliente. A partir daí, basta perguntar sobre eleições municipais, estaduais ou presidenciais em linguagem natural. Confira os modelos prontos de configuração em [`docs/MCP_CLIENT_INTEGRATION.md`](docs/MCP_CLIENT_INTEGRATION.md).
+
 **Preciso de alguma chave de API para usar o MCP TSE?**
-Não. Todas as 7 ferramentas (`tse_eleicoes_catalogo`, `tse_municipios_zonas`, `tse_apuracao_cargo`, `tse_candidatos_busca`, `tse_partidos_federacoes`, `tse_comparecimento_abstencao` e `tse_dados_abertos_datasets`) consultam endpoints públicos oficiais do TSE sem chave.
+Não. Todas as 7 ferramentas (`tse_eleicoes_catalogo`, `tse_municipios_zonas`, `tse_apuracao_cargo`, `tse_candidatos_busca`, `tse_partidos_federacoes`, `tse_comparecimento_abstencao` e `tse_dados_abertos_datasets`) consultam endpoints públicos oficiais do TSE sem chave nem cadastro prévio. `MCP_API_KEY` só é necessária se você expuser o servidor HTTP/Worker em rede.
+
+**Os dados retornados são oficiais e têm proveniência verificável?**
+Sim. Toda consulta lê diretamente os JSONs oficiais da arquitetura EA20 (`resultados.tse.jus.br`) ou a API CKAN (`dadosabertos.tse.jus.br`), devolvendo `source_url` e `fetchedAt` em UTC na resposta. Em caso de indisponibilidade, o servidor retorna erro explícito (`isError: true`) sem inventar números.
 
 **Por que o servidor não acessa diretamente `divulgacandcontas.tse.jus.br`?**
 Porque esse domínio aplica proteção Akamai WAF (`HTTP 403`) contra clientes automatizados. O MCP TSE respeita a barreira e oferece `tse_dados_abertos_datasets` para localizar pacotes CSV/ZIP oficiais em `cdn.tse.jus.br`, além de indicar `cnpj_lookup` (`@aredes.me/mcp-dadosbr`) para auditoria cadastral de CNPJs.
 
 **Como encontro `ciclo`, `codigo_eleicao` e `codigo_tse_municipio` corretos?**
-Chame `tse_eleicoes_catalogo` para obter `ciclo` e `codigo_eleicao` diretamente de `ele-c.json` e use `tse_municipios_zonas` para traduzir o nome ou código IBGE (7 dígitos) para o código TSE (5 dígitos) e suas zonas eleitorais.
+Se você omitir `ciclo` e `codigo_eleicao` em `tse_apuracao_cargo`, `tse_candidatos_busca` ou `tse_partidos_federacoes`, o servidor aplica o padrão do grupo do cargo (`ele2024/619` para municipais, `ele2026/6259` para estaduais e `ele2026/6257` para presidente). Para outros pleitos, consulte `tse_eleicoes_catalogo` e use `tse_municipios_zonas` para traduzir o município (IBGE 7 dígitos → TSE 5 dígitos).
 
 **O MCP TSE possui painéis visuais (`ui://` MCP Apps) como o `@aredes.me/mcp-dadosbr`?**
 Não na `v0.1.0`. As 7 ferramentas respondem em JSON estruturado no conteúdo textual para maximizar simplicidade, compatibilidade universal e paridade entre CLI e Cloudflare Workers.
@@ -322,20 +337,20 @@ Em resumo prático *(não substitui o texto jurídico da licença)*:
 
 ## Desenvolvimento e contribuição
 
-Depois de instalar e compilar (`npm ci && npm run build`), execute a verificação completa:
+Depois de instalar e compilar (`npm ci && npm run build && npm run build:worker`), execute a verificação completa:
 
 ```bash
-npm test                 # Suíte unitária (Vitest)
-npm run test:coverage    # Cobertura V8 (85% lines/funcs/stmts, 80% branches)
-npm run test:transport   # Handshake, 7 tools, resources vazio e 101 chamadas stdio + HTTP/SSE
-npm run build:worker     # Build do Cloudflare Worker (tsconfig.worker.json)
+npx tsc --noEmit && npx tsc -p tsconfig.worker.json --noEmit  # Type-check Node e Worker
+npm test                                                       # Suíte unitária (Vitest)
+npm run test:coverage                                          # Cobertura V8 (85% lines/funcs/stmts, 80% branches)
+npm run test:transport                                         # Handshake, 7 tools, resources vazio e 101 chamadas stdio + HTTP/SSE
 ```
 
 ### Documentação técnica no repositório
 
-- [Arquitetura AS-IS (`.archagents/02-architecture.md`)](.archagents/02-architecture.md) · [Integrações TSE (`.archagents/05-integrations.md`)](.archagents/05-integrations.md)
-- [CI, ambientes e deploy (`.archagents/06-infra-devops.md`)](.archagents/06-infra-devops.md) · [Segurança e limites (`.archagents/07-security-compliance.md`)](.archagents/07-security-compliance.md)
-- [Runbooks e resposta a incidentes (`.archagents/10-runbooks.md`)](.archagents/10-runbooks.md) · [Índice `.archagents/README.md`](.archagents/README.md)
+- **Documentação em `docs/`:** [Índice (`docs/README.md`)](docs/README.md) · [Guia Rápido PT-BR (`docs/pt-br/README.md`)](docs/pt-br/README.md) · [Configuração (`docs/CONFIGURATION.md`)](docs/CONFIGURATION.md) · [Clientes MCP (`docs/MCP_CLIENT_INTEGRATION.md`)](docs/MCP_CLIENT_INTEGRATION.md) · [Exemplos Reais (`docs/USAGE_EXAMPLES.md`)](docs/USAGE_EXAMPLES.md)
+- **Resumo para IAs e histórico:** [`llms.txt`](llms.txt) · [`CHANGELOG.md`](CHANGELOG.md)
+- **Arquitetura e Governança `.archagents/`:** [Arquitetura AS-IS (`.archagents/02-architecture.md`)](.archagents/02-architecture.md) · [Integrações TSE (`.archagents/05-integrations.md`)](.archagents/05-integrations.md) · [CI e Cloudflare (`.archagents/06-infra-devops.md`)](.archagents/06-infra-devops.md) · [Segurança (`.archagents/07-security-compliance.md`)](.archagents/07-security-compliance.md) · [Runbooks (`.archagents/10-runbooks.md`)](.archagents/10-runbooks.md) · [Índice `.archagents/README.md`](.archagents/README.md)
 
 Leia o [guia de contribuição (`CONTRIBUTING.md`)](CONTRIBUTING.md) ou abra uma [issue](https://github.com/cristianoaredes/mcp-tse/issues/new).
 
@@ -353,22 +368,11 @@ O MCP TSE realiza consultas sob demanda a fontes públicas eleitorais do TSE e n
 
 ### MCP TSE `by Orqo` — Brazilian electoral data in AI conversations, with source, provenance, and explicit boundaries.
 
-**MCP TSE** (`@aredes.me/mcp-tse`) is an open-source [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server maintained by **[Orqo](https://orqo.pro/en/)** that connects AI assistants to **7 zero-key Brazilian electoral data tools** backed directly by the **Tribunal Superior Eleitoral (TSE)** (`resultados.tse.jus.br` EA20 static JSON & `dadosabertos.tse.jus.br` CKAN APIv3).
+**MCP TSE** (`@aredes.me/mcp-tse`, `v0.1.0`) is an open-source [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server maintained by **[Orqo](https://orqo.pro/en/)** that connects AI assistants to **7 zero-key Brazilian electoral data tools** backed directly by the **Tribunal Superior Eleitoral (TSE)** (`resultados.tse.jus.br` EA20 static JSON & `dadosabertos.tse.jus.br` CKAN APIv3).
 
-- **7 zero-key tools:** election cycle catalog (`tse_eleicoes_catalogo`), 5-digit TSE ↔ 7-digit IBGE municipality & electoral zone translation (`tse_municipios_zonas`), paginated section tallies and candidate rankings (`tse_apuracao_cargo`), candidate and running-mate search (`tse_candidatos_busca`), party & federation aggregations (`tse_partidos_federacoes`), voter turnout/abstention summaries (`tse_comparecimento_abstencao`), and CKAN open-data package discovery with `cdn.tse.jus.br` links (`tse_dados_abertos_datasets`).
+- **7 zero-key tools:** election cycle catalog (`tse_eleicoes_catalogo`), 5-digit TSE ↔ 7-digit IBGE municipality & electoral zone translation (`tse_municipios_zonas`), paginated section tallies and candidate rankings (`tse_apuracao_cargo`), candidate and running-mate search (`tse_candidatos_busca`), party & federation aggregations (`tse_partidos_federacoes`), voter turnout/abstention summaries (`tse_comparecimento_abstencao`), and CKAN open-data package discovery with `cdn.tse.jus.br` links (`tse_dados_abertos_datasets`). Nominal tally/search/party tools use cargo-aware election defaults (`ele2024/619` municipal, `ele2026/6259` state, `ele2026/6257` presidential).
 - **Dual execution perimeters:** Node.js CLI (`stdio` or `HTTP/SSE`, with strict `stdout` JSON-RPC isolation and fail-closed `MCP_API_KEY` outside loopback) and Cloudflare Worker (`POST /mcp`, `GET|POST /sse`, `POST /tools/{toolName}` REST, `GET /openapi.json`, `GET /health`, `GET /`).
-- **Quick start (Node.js 22.12+, 24, or 26):**
-  ```json
-  {
-    "mcpServers": {
-      "tse": {
-        "command": "npx",
-        "args": ["-y", "@aredes.me/mcp-tse"]
-      }
-    }
-  }
-  ```
-  To run from source, execute `npm ci && npm run build` and point `args` to `build/lib/adapters/cli.js`. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for modular architecture notes (`lib/`), coverage thresholds, and the `main` PR workflow.
+- **Distribution & Quick start (Node.js 22.12+, 24, or 26):** `@aredes.me/mcp-tse` is currently `0.1.0` on `main` and **not yet published on npm**. Build from source (`git clone https://github.com/cristianoaredes/mcp-tse.git && npm ci && npm run build && npm run build:worker`) and point `mcpServers.tse` to `build/lib/bin/mcp-tse.js` (or `npx -y @aredes.me/mcp-tse` once published). See [`docs/`](docs/README.md), [`CHANGELOG.md`](CHANGELOG.md), [`llms.txt`](llms.txt), and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Explicit boundaries:** never queries or bypasses the Akamai WAF (`HTTP 403`) on `divulgacandcontas.tse.jus.br`, does not stream full CKAN ZIP/CSV archives inside the stateless Worker, enforces SSRF host allowlists (`resultados.tse.jus.br`, `dadosabertos.tse.jus.br`, `cdn.tse.jus.br`), ships text JSON responses only (no `ui://` MCP Apps; `resources/list` is empty), and attaches `lgpd_notice` (LGPD Art. 20) on nominal lookups.
 - **Governed in the open:** built with **[Codebase OPS by Orqo](https://orqo.pro/en/)** — full specification, design, execution run, and independent P10 verification live in [`.archagents/`](.archagents/README.md).
 - **License & Privacy:** [GNU AGPL-3.0-only](LICENSE) (network copyleft), third-party notices in [`NOTICE.md`](NOTICE.md), and LGPD transparency policy in [`PRIVACY.md`](PRIVACY.md).

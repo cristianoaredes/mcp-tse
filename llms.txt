@@ -1,0 +1,42 @@
+# MCP TSE by Orqo (@aredes.me/mcp-tse)
+
+> Open-source Model Context Protocol (MCP) server built by Orqo providing 7 read-only, zero-API-key tools for Brazilian electoral data backed directly by Tribunal Superior Eleitoral (TSE) official EA20 results JSON endpoints and Dados Abertos CKAN APIv3.
+
+- Version in codebase (`main`): `0.1.0`
+- License: `AGPL-3.0-only`
+- Runtime targets: Node.js (`>=22.12 || 24 || 26`, `stdio` / `HTTP+SSE`) and Cloudflare Workers (`POST /mcp`, `/sse`, REST `POST /tools/{toolName}`, `GET /openapi.json`, `GET /health`, `GET /`)
+- Distribution status (`2026-11-23`): Not yet published on npm or GitHub Releases; build from source (`npm ci && npm run build && npm run build:worker`) until the first release.
+
+## Ferramentas
+
+- `tse_eleicoes_catalogo`: Lista eleições ordinárias e suplementares do catálogo oficial `ele-c.json` com códigos de pleito, eleição, 2º turno, abrangências e cargos (`ano` `2014..2034`).
+- `tse_municipios_zonas`: Traduz municípios entre código IBGE (7 dígitos), código TSE (5 dígitos), nome e UF, retornando zonas eleitorais do pleito selecionado (`ele2024/619` padrão).
+- `tse_apuracao_cargo`: Retorna totalização oficial EA20 (`-u.json`) paginada por cargo, seções, eleitorado, votos e candidatos ranqueados com `vices_suplentes[]`, aplicando defaults por cargo (`ele2024/619` municipais, `ele2026/6259` estaduais, `ele2026/6257` presidente) e `lgpd_notice`.
+- `tse_candidatos_busca`: Busca candidatos e vices/suplentes no EA20 por `nome`, `numero`, `partido` ou `apenas_eleitos`, com defaults por cargo e `lgpd_notice` (Art. 20).
+- `tse_partidos_federacoes`: Agrega desempenho por federação e partido (`tvtn`, `tvan`, `votos_legenda`, `total_candidatos`, `total_eleitos`) no EA20 por cargo.
+- `tse_comparecimento_abstencao`: Consulta eleitorado apto, comparecimento e abstenção (`-ab.json`) por UF (`br` padrão) ou `codigo_tse_municipio` (com limite de 100 abrangências em `abr[]`).
+- `tse_dados_abertos_datasets`: Pesquisa pacotes e mostra metadados (`package_search` / `package_show`) no CKAN do TSE retornando URLs CSV/ZIP em `cdn.tse.jus.br` e `upstream_waf_notice`.
+
+## Fontes oficiais
+
+- **TSE Resultados (EA20):** `https://resultados.tse.jus.br/oficial/`
+- **TSE Dados Abertos (CKAN APIv3):** `https://dadosabertos.tse.jus.br/api/3/action/`
+- **TSE Estatística / Pacotes ZIP e CSV:** `https://cdn.tse.jus.br/`
+
+## Docs
+
+- [README](https://github.com/cristianoaredes/mcp-tse/blob/main/README.md): Visão geral, catálogo das 7 ferramentas, instalação e FAQ.
+- [Docs Index](https://github.com/cristianoaredes/mcp-tse/blob/main/docs/README.md): Índice da documentação.
+- [Guia PT-BR](https://github.com/cristianoaredes/mcp-tse/blob/main/docs/pt-br/README.md): Guia rápido em português brasileiro.
+- [Configuration Guide](https://github.com/cristianoaredes/mcp-tse/blob/main/docs/CONFIGURATION.md): Variáveis de ambiente, `.mcprc.json`, allowlists SSRF e Cloudflare Workers.
+- [MCP Client Integration](https://github.com/cristianoaredes/mcp-tse/blob/main/docs/MCP_CLIENT_INTEGRATION.md): Setup no Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Continue e HTTP/REST.
+- [Usage Examples](https://github.com/cristianoaredes/mcp-tse/blob/main/docs/USAGE_EXAMPLES.md): Chamadas JSON-RPC e saídas reais das 7 ferramentas + fluxos cruzados com `@aredes.me/mcp-dadosbr` e `@aredes.me/mcp-orcamento`.
+- [Changelog](https://github.com/cristianoaredes/mcp-tse/blob/main/CHANGELOG.md): Histórico de alterações da versão `0.1.0`.
+- [Privacy & LGPD](https://github.com/cristianoaredes/mcp-tse/blob/main/PRIVACY.md): Política de privacidade e salvaguardas LGPD Art. 20.
+
+## Limites
+
+- Somente leitura: nunca consulta nem tenta contornar a barreira Akamai WAF (`HTTP 403`) em `divulgacandcontas.tse.jus.br`.
+- Sem download/streaming de arquivos ZIP/CSV completos dentro do Worker stateless (`< 128 MB`): devolve as URLs oficiais em `cdn.tse.jus.br`.
+- Sem painéis HTML `ui://` (MCP Apps) na `v0.1.0`: retorno exclusivamente em JSON textual estruturado (`ListResources` vazio).
+- Consultas nominais exigem revisão humana contra homônimos e eventuais retificações judiciais (`lgpd_notice`, Art. 20).
