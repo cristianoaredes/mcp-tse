@@ -34,5 +34,14 @@
     "tree": "51767b9c498e3599bd18f8452e6e66f1a04b0ed1",
     "updated_at": "2026-11-23T13:35:47Z",
     "updated_by": "criteria-check"
+  },
+  "TCK-0005": {
+    "content_digest": "sha256:d4e8e0908851c717c2058592d904a493a5e95a7270959b33764d52aa5bbe4140",
+    "criteria_digest": "sha256:0ad2049e4cc1cd22c2e223db9a3b3ce6b78f8264dc6aa1af59815271f3362ddd",
+    "head": "c81424b217d45f6deae5788649612e8c9f420a6d",
+    "passes": true,
+    "tree": "98b5f1606f734c004cf0c47920e42b38edda2f87",
+    "updated_at": "2026-11-23T17:00:30Z",
+    "updated_by": "criteria-check"
   }
 }
