@@ -1,0 +1,138 @@
+{
+  "schema": "result/1",
+  "ticket": "TCK-0004",
+  "run_id": "RUN-20261123-131628-seo-geo-docs",
+  "gerado_em": "2026-11-23T13:36:42Z",
+  "head": "58b4c379e95f75b556f040dddfea1bc8fd31e61c",
+  "status": "done",
+  "drive": null,
+  "estados": [
+    {
+      "n": 1,
+      "nome": "Pedido compreendido",
+      "atendido": true,
+      "evidencia": [
+        "ticket em 'done' (saiu de raw)",
+        "acceptance[]: 2 critério(s)",
+        "restrições registradas: nenhuma"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "evento de rota: não liga a ticket nem a run (não medido)"
+      ]
+    },
+    {
+      "n": 2,
+      "nome": "Execução autorizada",
+      "atendido": null,
+      "evidencia": [
+        "o ticket passou por executing (status 'done')",
+        "nenhuma restrição read-only"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "run sem drive (guiado à mão): o handoff do designed→executing não foi lido",
+        "budget.json ausente: sem teto de orçamento medido",
+        "max_attempts_total ausente no run: sem teto de tentativas medido"
+      ]
+    },
+    {
+      "n": 3,
+      "nome": "Tarefa executada",
+      "atendido": null,
+      "evidencia": [
+        "7 arquivo(s) alterado(s) no working tree (TCK-3115)"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "actions.jsonl: sem passos de iteração do driver"
+      ]
+    },
+    {
+      "n": 4,
+      "nome": "Requisito comprovado",
+      "atendido": true,
+      "evidencia": [
+        "lock: passes true",
+        "lock fresh: o conteúdo é o que foi verificado",
+        "VER vinculado ao ticket (exigido)",
+        "o VER vinculado vale para o writer (veredito aprovado, posterior ao último executing e com fuso)"
+      ],
+      "falta": [],
+      "nao_medido": []
+    },
+    {
+      "n": 5,
+      "nome": "Publicação autorizada",
+      "atendido": null,
+      "evidencia": [
+        "nenhuma restrição no-publish"
+      ],
+      "falta": [],
+      "nao_medido": [
+        "run sem drive: a autonomia não foi registrada",
+        "sessão: as restrições da sessão não são conhecidas aqui (não medido)",
+        "URL de PR: não medida (sem rede)",
+        "autonomia concedida ao operador: não medida aqui (o nível do drive é o --level do ratchet, default L2)"
+      ]
+    }
+  ],
+  "implementado": null,
+  "verificado": true,
+  "publicado": {
+    "valor": null,
+    "motivo": "nenhum commit cita o ticket: nada a publicar não é publicado"
+  },
+  "requisitos": [
+    {
+      "n": 1,
+      "check": "npm test",
+      "expect": "",
+      "lock_passes": true,
+      "freshness": "fresh"
+    },
+    {
+      "n": 2,
+      "check": "npm run build && npm run build:worker",
+      "expect": "",
+      "lock_passes": true,
+      "freshness": "fresh"
+    }
+  ],
+  "arquivos_alterados": [],
+  "arquivos_alterados_total": 0,
+  "pendencias": [
+    "Não coberto aqui (VER-20261123-133548-tck-0004): - Os testes unitarios Vitest (`63/63`) e `test:transport` (`101` chamadas offline) usam mocks de `fetch` e loopback HTTP sem consultar endpoints vivos do TSE (`resultados.tse.jus.br`, `dadosabertos.tse.jus.br`) durante a execucao da suite (amostras vivas dos 7 tools foram capturadas separadamente em `stdio` antes das edicoes). - O alvo Cloudflare Workers foi compilado via `tsc -p tsconfig.worker.json` e exercitado em Node com KV mockado, sem exec…"
+  ],
+  "ver": {
+    "id": "VER-20261123-133548-tck-0004",
+    "verdict": "approved",
+    "limites": "- Os testes unitarios Vitest (`63/63`) e `test:transport` (`101` chamadas offline) usam mocks de `fetch` e loopback HTTP sem consultar endpoints vivos do TSE (`resultados.tse.jus.br`, `dadosabertos.tse.jus.br`) durante a execucao da suite (amostras vivas dos 7 tools foram capturadas separadamente em `stdio` antes das edicoes). - O alvo Cloudflare Workers foi compilado via `tsc -p tsconfig.worker.json` e exercitado em Node com KV mockado, sem execucao em `workerd` ou `wrangler deploy`. - Validac…"
+  },
+  "consumo": {
+    "usd": null,
+    "cost_source": "unknown",
+    "iteracoes": null,
+    "tentativas_total": null,
+    "max_attempts_total": null,
+    "teto_usd": null,
+    "gasto_usd": null,
+    "unknown_spend": null,
+    "drives": null
+  },
+  "nao_medido": [
+    "drive: run sem drive (guiado à mão)",
+    "budget.json: ausente (sem teto de orçamento medido)",
+    "actions.jsonl: sem passos de iteração do driver",
+    "run.json: sem max_attempts_total",
+    "evento de rota: não liga a ticket nem a run (não medido)",
+    "run sem drive (guiado à mão): o handoff do designed→executing não foi lido",
+    "budget.json ausente: sem teto de orçamento medido",
+    "max_attempts_total ausente no run: sem teto de tentativas medido",
+    "run sem drive: a autonomia não foi registrada",
+    "sessão: as restrições da sessão não são conhecidas aqui (não medido)",
+    "URL de PR: não medida (sem rede)",
+    "autonomia concedida ao operador: não medida aqui (o nível do drive é o --level do ratchet, default L2)",
+    "publicado: nenhum commit cita o ticket: nada a publicar não é publicado"
+  ]
+}
