@@ -1,0 +1,10 @@
+[
+  {
+    "id": "LRN-0001",
+    "ticket": "TCK-0005",
+    "title": "Staged publishing 0.0.0-stage no npm atrasa disponibilidade do tarball .tgz de pacotes novos",
+    "recommendation": "Verificar HTTP 200 no dist.tarball alem do packument antes de executar npx smoke ou revisao P10",
+    "created_at": "2026-11-23T20:30:29Z",
+    "status": "proposed"
+  }
+]
